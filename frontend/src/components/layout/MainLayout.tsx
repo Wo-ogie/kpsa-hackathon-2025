@@ -1,10 +1,18 @@
 
+import { useMatches } from 'react-router-dom';
+import Header from '../Header'
 import BaseLayout from './BaseLayout'
 import BottomNavigation from './BottomNavigation'
 
 const MainLayout = () => {
+  const matches = useMatches();
+  const title = (matches[1]?.handle as { title?: string })?.title || ''
+
   return (
-    <BaseLayout mainClassName="min-h-[100dvh] px-5 pt-10">
+    <BaseLayout
+      header={<Header title={title} />}
+      mainClassName="min-h-[calc(100dvh-70px)] px-5"
+    >
       <BottomNavigation />
     </BaseLayout>
   )

@@ -1,30 +1,27 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Button from "../components/common/Button";
+import apiClient from "../lib/api";
 
 const ProtectorSelect = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const nickname = location.state?.nickname || "사용자";
+  const phone_number = location.state?.phone_number || "";
+
 
   const handleSelect = (isProtector: boolean) => {
-    // TODO: 보호자 여부 저장 처리
-    if (isProtector) {
-      // 보호자 계정으로 등록
+    apiClient.post('/auth/signup', {
+      nickname: nickname,
+      phone_number: phone_number,
+      is_guardian: isProtector
+    }).then((res) => {
+      console.log(res)
       navigate("/welcome");
-    } else {
-      // 일반 계정으로 등록
-      navigate("/welcome");
-    }
+    });
   };
 
   return (
-    <div className="min-h-screen flex flex-col mobile-container safe-area-top safe-area-bottom px-6">
-      {/* 헤더 */}
-      <div className="flex items-center pt-4 pb-6">
-        <button onClick={() => navigate(-1)}>
-          <img src="/icons/arrow_left.png" alt="back" className="w-6 h-6" />
-        </button>
-      </div>
-
-      {/* 메인 콘텐츠 - 화면 중앙 */}
+    <div className="h-[100dvh] flex flex-col  px-6">
       <div className="flex-1 flex flex-col justify-center">
         <div className="mb-12">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">보호자 계정으로<br />등록하시나요?</h1>
@@ -32,7 +29,6 @@ const ProtectorSelect = () => {
         </div>
       </div>
 
-      {/* 하단 버튼 */}
       <div className="pb-8 flex flex-col gap-3">
         <Button
           onClick={() => handleSelect(true)}

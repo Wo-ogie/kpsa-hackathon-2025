@@ -17,7 +17,7 @@ const KakaoLoginButton: React.FC<{ text: string, className?: string }> = ({ text
       className={`flex items-center bg-[#F8DF02] text-[#212012] font-bold border-none rounded-full px-3 cursor-pointer text-xs hover:bg-yellow-500 transition-colors w-[359px] h-[42px] relative ${className}`}
     >
       <img src="/images/login/kakao_logo.png" alt="kakao_logo" className="w-6 h-6 absolute left-3" />
-      <span className="w-full text-center">{text}</span>
+      <span className="w-full text-center text-xl">{text}</span>
     </button>
   );
 };

@@ -15,7 +15,7 @@ const PhoneInput = () => {
       const fullPhone = `${phone1}-${phone2}-${phone3}`;
       console.log("전화번호:", fullPhone);
       // TODO: 전화번호 저장 처리
-      navigate("/protector-select");
+      navigate("/protector-select", { state: { nickname: nickname, phone_number: `${phone1}${phone2}${phone3}` } });
     }
   };
 

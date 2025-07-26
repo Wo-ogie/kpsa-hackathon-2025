@@ -10,11 +10,15 @@ const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange })
   const [isWatering, setIsWatering] = useState(false);
   const [waterCount, setWaterCount] = useState(0);
   const [showGrowthAnimation, setShowGrowthAnimation] = useState(false);
+  const [apples, setApples] = useState<Array<{ id: number; x: number; y: number; isDropping: boolean }>>([]);
+  const [appleCount, setAppleCount] = useState(0);
   const treeRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dropIdCounter = useRef(0);
+  const appleIdCounter = useRef(0);
 
   const GROWTH_THRESHOLD = 5;
+  const MAX_APPLES = 3;
 
   // Tree shaking animation on mount
   useEffect(() => {
@@ -23,10 +27,25 @@ const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange })
     }
   }, []);
 
+  // Initialize apples when tree grows
+  useEffect(() => {
+    if (isGrown && appleCount === 0) {
+      const initialApples = [];
+      for (let i = 0; i < MAX_APPLES; i++) {
+        initialApples.push({
+          id: appleIdCounter.current++,
+          x: 120 + (i - 1) * 30, // Spread apples horizontally around center
+          y: 180 + Math.random() * 20, // Slightly random vertical position
+          isDropping: false
+        });
+      }
+      setApples(initialApples);
+      setAppleCount(MAX_APPLES);
+    }
+  }, [isGrown, appleCount]);
+
   const handleTreeClick = (event: React.MouseEvent<HTMLImageElement>) => {
     if (isWatering || showGrowthAnimation) return;
-
-    setIsWatering(true);
 
     const containerRect = containerRef.current?.getBoundingClientRect();
 
@@ -35,53 +54,90 @@ const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange })
       const x = event.clientX - containerRect.left;
       const y = event.clientY - containerRect.top;
 
-      // Create multiple water drops for better effect
-      const newDrops: Array<{ id: number, x: number, y: number }> = [];
-      for (let i = 0; i < 3; i++) {
-        newDrops.push({
-          id: dropIdCounter.current++,
-          x: x + (Math.random() - 0.5) * 40, // Spread drops around click point
-          y: y - 20 + (Math.random() - 0.5) * 20
-        });
-      }
+      // If tree is grown and we haven't reached max apples, drop an apple
+      if (isGrown && appleCount < MAX_APPLES) {
+        const newApple = {
+          id: appleIdCounter.current++,
+          x: x + (Math.random() - 0.5) * 60, // Random position around click
+          y: y - 30, // Start above click point
+          isDropping: true
+        };
 
-      setWaterDrops(prev => [...prev, ...newDrops]);
+        setApples(prev => [...prev, newApple]);
+        setAppleCount(prev => prev + 1);
 
-      // Increment water count
-      const newWaterCount = waterCount + 1;
-      setWaterCount(newWaterCount);
-
-      // Add extra shake to tree when watered
-      if (treeRef.current) {
-        treeRef.current.classList.add('animate-bounce');
-        setTimeout(() => {
-          treeRef.current?.classList.remove('animate-bounce');
-        }, 600);
-      }
-
-      // Check if plant should grow
-      if (newWaterCount >= GROWTH_THRESHOLD && !isGrown) {
-        setTimeout(() => {
-          setShowGrowthAnimation(true);
+        // Add shake animation to tree
+        if (treeRef.current) {
+          treeRef.current.classList.add('animate-bounce');
           setTimeout(() => {
-            onGrownChange(true);
-            setShowGrowthAnimation(false);
-          }, 1500); // Growth animation duration
-        }, 1000); // Wait for water animation to finish
+            treeRef.current?.classList.remove('animate-bounce');
+          }, 600);
+        }
+
+        // Stop dropping animation after drop completes
+        setTimeout(() => {
+          setApples(prev =>
+            prev.map(apple =>
+              apple.id === newApple.id ? { ...apple, isDropping: false } : apple
+            )
+          );
+        }, 800);
+
+        return;
       }
 
-      // Remove water drops after animation
-      setTimeout(() => {
-        setWaterDrops(prev => prev.filter(drop => !newDrops.find(newDrop => newDrop.id === drop.id)));
-        setIsWatering(false);
-      }, 1000);
+      // If not grown, continue with watering logic
+      if (!isGrown) {
+        setIsWatering(true);
+
+        // Create multiple water drops for better effect
+        const newDrops: Array<{ id: number, x: number, y: number }> = [];
+        for (let i = 0; i < 3; i++) {
+          newDrops.push({
+            id: dropIdCounter.current++,
+            x: x + (Math.random() - 0.5) * 40, // Spread drops around click point
+            y: y - 20 + (Math.random() - 0.5) * 20
+          });
+        }
+
+        setWaterDrops(prev => [...prev, ...newDrops]);
+
+        // Increment water count
+        const newWaterCount = waterCount + 1;
+        setWaterCount(newWaterCount);
+
+        // Add extra shake to tree when watered
+        if (treeRef.current) {
+          treeRef.current.classList.add('animate-bounce');
+          setTimeout(() => {
+            treeRef.current?.classList.remove('animate-bounce');
+          }, 600);
+        }
+
+        // Check if plant should grow
+        if (newWaterCount >= GROWTH_THRESHOLD && !isGrown) {
+          setTimeout(() => {
+            setShowGrowthAnimation(true);
+            setTimeout(() => {
+              onGrownChange(true);
+              setShowGrowthAnimation(false);
+            }, 1500); // Growth animation duration
+          }, 1000); // Wait for water animation to finish
+        }
+
+        // Remove water drops after animation
+        setTimeout(() => {
+          setWaterDrops(prev => prev.filter(drop => !newDrops.find(newDrop => newDrop.id === drop.id)));
+          setIsWatering(false);
+        }, 1000);
+      }
     }
   };
 
   return (
     <div className="flex-1 overflow-y-auto px-4" style={{ height: 'calc(100vh - 200px)' }}>
       <div className="flex flex-col items-center">
-        <div className="relative w-full max-w-md">
+        <div className="relative w-full max-w-md" ref={containerRef}>
           <div className="relative flex justify-center mb-6">
             <img
               ref={treeRef}
@@ -102,6 +158,22 @@ const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange })
                 style={{
                   left: `${drop.x}px`,
                   top: `${drop.y}px`
+                }}
+              />
+            ))}
+
+            {/* Apples */}
+            {apples.map(apple => (
+              <img
+                key={apple.id}
+                src="/assets/apple.svg"
+                alt="Apple"
+                className={`absolute w-8 h-8 pointer-events-none z-20 transition-all duration-800 ease-in-out ${apple.isDropping ? 'animate-bounce' : ''
+                  }`}
+                style={{
+                  left: `${apple.x}px`,
+                  top: `${apple.y}px`,
+                  transform: apple.isDropping ? 'translateY(60px) rotate(360deg)' : 'translateY(0) rotate(0deg)'
                 }}
               />
             ))}

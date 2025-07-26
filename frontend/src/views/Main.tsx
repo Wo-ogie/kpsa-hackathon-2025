@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import TreeNameModal from '../components/common/modals/TreeNameModal';
 import CircleButton from '../components/common/CircleButton';
 import GameContainer from '../components/games/GameContainer';
+import Point from '../components/common/Point';
 
 const Main: React.FC = () => {
   const navigate = useNavigate();
@@ -35,16 +36,11 @@ const Main: React.FC = () => {
     <div className="bg-white max-w-[412px] mx-auto overflow-hidden relative">
       <div className=" pb-4">
         <div className="flex justify-between items-start">
-          <div className="flex items-center bg-orange-primary rounded-full px-2 py-2">
-            <div className="w-8 h-8 text-orange-primary rounded-full bg-white flex items-center justify-center mr-2">
-              <span className="text-orange-primary font-bold text-sm">P</span>
-            </div>
-            <span className="text-white font-semibold">304 P</span>
-          </div>
+          <Point point={304} />
 
           <div className="flex items-center space-x-4">
-            <CircleButton icon="/icons/album.png" label="앨범" />
-            <CircleButton icon="/icons/store.png" label="상점" />
+            <CircleButton icon="/icons/album.png" label="앨범" onClick={() => navigate('/album')} />
+            <CircleButton icon="/icons/store.png" label="상점" onClick={() => navigate('/store')} />
           </div>
         </div>
       </div>

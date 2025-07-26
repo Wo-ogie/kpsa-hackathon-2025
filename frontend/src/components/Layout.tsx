@@ -1,13 +1,7 @@
-import { Outlet } from 'react-router-dom'
+import BaseLayout from './layout/BaseLayout'
 
 const Layout = (): JSX.Element => {
-  return (
-    <div className="min-h-screen bg-background">
-      <main className="min-h-screen">
-        <Outlet />
-      </main>
-    </div>
-  )
+  return <BaseLayout />
 }
 
-export default Layout 
+export default Layout

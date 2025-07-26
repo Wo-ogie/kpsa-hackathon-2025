@@ -1,7 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Home from '../views/Home'
-import Login from '../views/Login'
 import About from '../views/About'
 import NotFound from '../views/NotFound'
 import Signup from '../views/Signup'
@@ -10,6 +9,8 @@ import KakaoCallback from '../views/KakaoCallback'
 import Welcome from '../views/Welcome'
 import ProtectorSelect from '../views/ProtectorSelect'
 import Main from '../views/Main'
+import MainLayout from '../components/layout/MainLayout'
+import Dose from '../views/Dose'
 
 export const router = createBrowserRouter([
   {
@@ -19,10 +20,6 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
-      },
-      {
-        path: 'login',
-        element: <Login />,
       },
       {
         path: 'kakao-callback',
@@ -37,16 +34,26 @@ export const router = createBrowserRouter([
         element: <PhoneInput />,
       },
       {
+        path: 'welcome',
+        element: <Welcome />,
+      },
+    ],
+  },
+  {
+    path: '',
+    element: <MainLayout />,
+    children: [
+      {
+        path: 'main',
+        element: <Main />,
+      },
+      {
         path: 'protector-select',
         element: <ProtectorSelect />,
       },
       {
-        path: 'welcome',
-        element: <Welcome />,
-      },
-      {
-        path: 'main',
-        element: <Main />,
+        path: 'dose',
+        element: <Dose />,
       },
       {
         path: 'about',
@@ -57,5 +64,6 @@ export const router = createBrowserRouter([
         element: <NotFound />,
       },
     ],
-  },
+
+  }
 ]) 

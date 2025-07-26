@@ -1,6 +1,6 @@
 from datetime import datetime, date
 
-from sqlalchemy import DateTime, BigInteger, String, Integer, Boolean, Date, ForeignKey, Double
+from sqlalchemy import DateTime, BigInteger, String, Integer, Boolean, Date, ForeignKey, Double, SmallInteger
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -35,7 +35,7 @@ class User(BaseEntity):
     kakao_uid: Mapped[str] = mapped_column("kakao_uid", String(255), nullable=False)
     fcm_token: Mapped[str] = mapped_column("fcm_token", String(255), nullable=False)
 
-    purchased_plants: Mapped[list["PurchasedPlant"]] = relationship("PurchasedPlant", lazy="select")
+    purchased_plants: Mapped[list["PurchasedPlant"]] = relationship("PurchasedPlant", lazy="joined")
 
 
 class Prescription(BaseEntity):
@@ -46,9 +46,9 @@ class Prescription(BaseEntity):
     name: Mapped[str] = mapped_column("name", String(50), nullable=False)
     medication_start_date: Mapped[date] = mapped_column("medication_start_date", Date, nullable=False)
 
-    user: Mapped[User] = relationship("User", lazy="select")
+    user: Mapped[User] = relationship("User", lazy="joined")
     drugs: Mapped[list["PrescriptionDrug"]] = relationship(
-        "PrescriptionDrug", lazy="selectin", back_populates="prescription", cascade="all, delete-orphan"
+        "PrescriptionDrug", lazy="joined", back_populates="prescription", cascade="all, delete-orphan"
     )
 
 
@@ -64,7 +64,7 @@ class PrescriptionDrug(BaseEntity):
     medication_time: Mapped[MedicationTime] = mapped_column("medication_time", nullable=False)
     count: Mapped[int] = mapped_column("count", Integer, nullable=False)
 
-    prescription: Mapped["Prescription"] = relationship("Prescription", lazy="select", back_populates="drugs")
+    prescription: Mapped["Prescription"] = relationship("Prescription", lazy="joined", back_populates="drugs")
 
 
 class Plant(BaseEntity):
@@ -76,6 +76,7 @@ class Plant(BaseEntity):
     point_per_fruit: Mapped[int] = mapped_column("point_per_fruit", Integer, nullable=False)
     unlock_price: Mapped[int] = mapped_column("unlock_price", Integer, nullable=False)
     plant_price: Mapped[int] = mapped_column("plant_price", Integer, nullable=False)
+    growth_increment: Mapped[int] = mapped_column("growth_increment", SmallInteger, nullable=False)
 
 
 class UserPlant(BaseEntity):
@@ -89,8 +90,8 @@ class UserPlant(BaseEntity):
     fruit_count: Mapped[int] = mapped_column("fruit_count", Integer, nullable=False, default=0)
     is_completed: Mapped[bool] = mapped_column("is_completed", Boolean, nullable=False, default=False)
 
-    user: Mapped["User"] = relationship("User", lazy="select")
-    plant: Mapped["Plant"] = relationship("Plant", lazy="select")
+    user: Mapped["User"] = relationship("User", lazy="joined")
+    plant: Mapped["Plant"] = relationship("Plant", lazy="joined")
 
 
 class PurchasedPlant(BaseEntity):
@@ -100,5 +101,18 @@ class PurchasedPlant(BaseEntity):
     user_id: Mapped[int] = mapped_column("user_id", BigInteger, ForeignKey("user.id"), nullable=False)
     plant_id: Mapped[int] = mapped_column("plant_id", BigInteger, ForeignKey("plant.id"), nullable=False)
 
-    user: Mapped["User"] = relationship("User", lazy="select")
-    plant: Mapped["Plant"] = relationship("Plant", lazy="select")
+    user: Mapped["User"] = relationship("User", lazy="joined")
+    plant: Mapped["Plant"] = relationship("Plant", lazy="joined")
+
+
+class MedicationHistory(BaseEntity):
+    __tablename__ = "medication_history"
+
+    id: Mapped[int] = mapped_column("id", BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column("user_id", BigInteger, ForeignKey("user.id"), nullable=False)
+    prescription_id: Mapped[int] = mapped_column(
+        "prescription_id", BigInteger, ForeignKey("prescription.id"), nullable=False
+    )
+    medication_time: Mapped[MedicationTime] = mapped_column("medication_time", String(50), nullable=False)
+
+    prescription: Mapped["Prescription"] = relationship("Prescription", lazy="joined")

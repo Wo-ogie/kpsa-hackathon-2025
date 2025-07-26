@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS `medication_history`;
 DROP TABLE IF EXISTS `purchased_plant`;
 DROP TABLE IF EXISTS `user_plant`;
 DROP TABLE IF EXISTS `plant`;
@@ -47,14 +48,15 @@ CREATE TABLE `prescription_drug`
 
 CREATE TABLE `plant`
 (
-    `id`              BIGINT      NOT NULL AUTO_INCREMENT,
-    `name`            VARCHAR(50) NOT NULL,
-    `max_fruit_count` INT         NOT NULL,
-    `point_per_fruit` INT         NOT NULL,
-    `unlock_price`    INT         NOT NULL,
-    `plant_price`     INT         NOT NULL,
-    `created_at`      TIMESTAMP   NOT NULL,
-    `updated_at`      TIMESTAMP   NOT NULL,
+    `id`               BIGINT      NOT NULL AUTO_INCREMENT,
+    `name`             VARCHAR(50) NOT NULL,
+    `max_fruit_count`  INT         NOT NULL,
+    `point_per_fruit`  INT         NOT NULL,
+    `unlock_price`     INT         NOT NULL,
+    `plant_price`      INT         NOT NULL,
+    `growth_increment` SMALLINT    NOT NULL,
+    `created_at`       TIMESTAMP   NOT NULL,
+    `updated_at`       TIMESTAMP   NOT NULL,
     PRIMARY KEY (`id`)
 );
 
@@ -84,4 +86,17 @@ CREATE TABLE `user_plant`
     PRIMARY KEY (`id`),
     FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
     FOREIGN KEY (`plant_id`) REFERENCES `plant` (`id`)
-)
+);
+
+CREATE TABLE `medication_history`
+(
+    `id`              BIGINT      NOT NULL AUTO_INCREMENT,
+    `user_id`         BIGINT      NOT NULL,
+    `prescription_id` BIGINT      NOT NULL,
+    `medication_time` VARCHAR(50) NOT NULL,
+    `created_at`      TIMESTAMP   NOT NULL,
+    `updated_at`      TIMESTAMP   NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
+    FOREIGN KEY (`prescription_id`) REFERENCES `prescription` (`id`)
+);

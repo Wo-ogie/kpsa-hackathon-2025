@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Response, Depends, Path
 from openai import OpenAI
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth_session import get_current_user
@@ -12,7 +13,8 @@ from src.constant import MedicationTime
 from src.database import get_session
 from src.entity import Prescription, PrescriptionDrug
 from src.schema import (
-    ParsePrescriptionRequest, ParsePrescriptionResponse, CreatePrescriptionRequest, PrescriptionResponse
+    ParsePrescriptionRequest, ParsePrescriptionResponse, CreatePrescriptionRequest, PrescriptionResponse,
+    PrescriptionsResponse
 )
 
 PARSE_PRESCRIPTION_TEMPLATE: str = """OCR로 추출한 처방전 텍스트 데이터가 주어집니다.
@@ -32,6 +34,49 @@ PARSE_PRESCRIPTION_TEMPLATE: str = """OCR로 추출한 처방전 텍스트 데�
     """
 
 router = APIRouter(prefix="/api", tags=["prescription"])
+
+
+@router.get(
+    path="/users/me/prescriptions",
+    summary="내 복용 처방전 목록 조회",
+    description="내 복용 처방전 목록을 조회합니다."
+)
+async def find_my_prescriptions(
+    current_user_id: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> PrescriptionsResponse:
+    result = await session.execute(
+        select(Prescription).where(Prescription.user_id == current_user_id)
+    )
+    prescriptions: list[Prescription] = result.unique().scalars().all()
+    return PrescriptionsResponse(
+        prescriptions=[
+            PrescriptionResponse.model_validate(prescription)
+            for prescription in prescriptions
+        ]
+    )
+
+
+@router.get(
+    path="/users/{user_id}/prescriptions",
+    summary="복용 처방전 목록 조회",
+    description="복용 처방전 목록을 조회합니다."
+)
+async def find_my_prescriptions(
+    user_id: Annotated[int, Path(..., description="복용 처방전 목록을 조회할 유저 ID")],
+    _: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> PrescriptionsResponse:
+    result = await session.execute(
+        select(Prescription).where(Prescription.user_id == user_id)
+    )
+    prescriptions: list[Prescription] = result.unique().scalars().all()
+    return PrescriptionsResponse(
+        prescriptions=[
+            PrescriptionResponse.model_validate(prescription)
+            for prescription in prescriptions
+        ]
+    )
 
 
 @router.post(
@@ -162,5 +207,4 @@ async def _create_prescription(
     await session.commit()
     await session.refresh(prescription)
 
-    await prescription.awaitable_attrs.drugs
     return PrescriptionResponse.model_validate(prescription)

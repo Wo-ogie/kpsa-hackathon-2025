@@ -1,20 +1,24 @@
 from typing import Any, Annotated
 
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Query
 from httpx import AsyncClient
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth_session import get_current_user
 from src.client import gg_client
 from src.client.async_client import get_async_client
 from src.constant import MedicationTime
-from src.schema import PrescriptionDrugsResponse
+from src.database import get_session
+from src.entity import PrescriptionDrug, Prescription
+from src.schema import PrescriptionDrugsResponse, PrescriptionDrugResponse
 from src.schema import SearchDrugNamesResponse
 
-router = APIRouter(prefix="/api/drugs", tags=["drug"])
+router = APIRouter(prefix="/api", tags=["drug"])
 
 
 @router.get(
-    path="/names/search",
+    path="/drugs/names/search",
     summary="약 이름 검색",
     description="약 이름을 검색합니다",
 )
@@ -28,12 +32,23 @@ async def search_drug_names(
 
 
 @router.get(
-    path="/medication-time/{medication_time}",
-    summary="복용 시간별 약 목록 조회",
-    description="특정 복용 시간(아침, 점심, 저녁)에 복용해야 하는 약 목록을 조회합니다"
+    path="/users/me/drugs",
+    summary="복용 약 목록 조회",
+    description="복용 약 목록을 조회합니다"
 )
-async def find_drugs_by_medication_time(
-    medication_time: Annotated[MedicationTime, Path(..., description="복용 시간")],
-    current_user_id: int = Depends(get_current_user)
+async def find_my_drugs(
+    medication_time: Annotated[MedicationTime, Query(..., description="복용 시간")],
+    current_user_id: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ) -> PrescriptionDrugsResponse:
-    raise NotImplementedError("Not supported yet.")
+    result = await session.execute(
+        select(PrescriptionDrug)
+        .join(Prescription)
+        .where(
+            Prescription.user_id == current_user_id,
+            PrescriptionDrug.medication_time == medication_time
+        )
+    )
+    drugs: list[PrescriptionDrug] = result.unique().scalars().all()
+    drug_responses: list[PrescriptionDrugResponse] = [PrescriptionDrugResponse.model_validate(drug) for drug in drugs]
+    return PrescriptionDrugsResponse(drugs=drug_responses)

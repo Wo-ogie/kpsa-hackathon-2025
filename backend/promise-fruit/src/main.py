@@ -10,6 +10,7 @@ from starlette.staticfiles import StaticFiles
 from src.client.async_client import init_async_client, close_async_client
 from src.router.auth_router import router as auth_router
 from src.router.drug_router import router as drug_router
+from src.router.medication_router import router as medication_router
 from src.router.plant_router import router as plant_router
 from src.router.prescription_router import router as prescription_router
 from src.router.user_router import router as user_router
@@ -41,6 +42,7 @@ app.include_router(user_router)
 app.include_router(prescription_router)
 app.include_router(drug_router)
 app.include_router(plant_router)
+app.include_router(medication_router)
 
 app.add_middleware(
     CORSMiddleware,

@@ -52,7 +52,7 @@ Drug
 
 class MedicationVerificationRequest(BaseModel):
     medication_time: MedicationTime = Field(..., description="복용 시간 (아침/점심/저녁)")
-    drug_ids: list[int] = Field(..., description="복용한 약들의 ID 목록")
+    prescription_ids: list[int] = Field(..., description="복용을 끝낸 처방전들의 ID 목록")
 
 
 class SearchDrugNamesResponse(BaseModel):
@@ -76,8 +76,8 @@ class PrescriptionDrugsResponse(BaseModel):
 
 
 class MedicationVerificationResponse(BaseModel):
-    medication_verification_history_id: int = Field(..., description="복약 인증 기록 ID")
-    active_plant: "ActivePlantResponse" = Field(..., description="현재 키우고 있는 식물 정보")
+    medication_history_ids: list[int] = Field(..., description="복약 인증 기록 ID 리스트 (처방전 단위)")
+    active_plant: "UserPlantResponse" = Field(..., description="현재 키우고 있는 식물 정보")
 
 
 """
@@ -131,6 +131,10 @@ class PrescriptionResponse(BaseModel):
         ]
 
 
+class PrescriptionsResponse(BaseModel):
+    prescriptions: list[PrescriptionResponse] = []
+
+
 """
 Plant
 """
@@ -138,6 +142,7 @@ Plant
 
 class PlantPlantRequest(BaseModel):
     plant_id: int = Field(..., description="심으려는 식물의 id")
+
 
 class UpdateActivePlantNicknameRequest(BaseModel):
     nickname: str = Field(..., description="식물의 별명")
@@ -152,6 +157,7 @@ class PlantResponse(BaseModel):
     point_per_fruit: int = Field(..., description="열매 하나 당 획득하는 포인트")
     unlock_price: int = Field(..., description="잠금 해제에 필요한 포인트")
     plant_price: int = Field(..., description="식물을 심는 데 필요한 포인트")
+    growth_increment: int = Field(..., description="성장 증가량")
     created_at: datetime = Field(..., description="생성 시각")
     updated_at: datetime = Field(..., description="수정 시각")
 
@@ -176,10 +182,8 @@ class UserPlantResponse(BaseModel):
 class ActivePlantResponse(BaseModel):
     active_plant: UserPlantResponse = Field(..., description="현재 키우고 있는 식물 정보")
 
-
 class FindActivePlantResponse(BaseModel):
-    active_plant: UserPlantResponse | None = Field(..., description="현재 키우고 있는 식물 정보. 키우고 있는 식물이 없다면 `null`.")
-
+    active_plant: UserPlantResponse | None = Field(..., description="현재 키우고 있는 식물 정보. 없는 경우 `null`")
 
 class HarvestFruitResponse(BaseModel):
     points_earned: int = Field(..., description="획득한 포인트")

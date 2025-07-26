@@ -1,10 +1,16 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth_session import get_current_user
+from src.database import get_session
+from src.entity import User
+from src.entity import UserPlant, Plant
 from src.schema import (
-    ActivePlantResponse, FindActivePlantResponse, PlantPlantRequest, HarvestFruitResponse,
-    UpdateActivePlantNicknameRequest
+    ActivePlantResponse, PlantPlantRequest, HarvestFruitResponse, UpdateActivePlantNicknameRequest,
+    FindActivePlantResponse
 )
+from src.schema import UserPlantResponse
 
 router = APIRouter(prefix="/api/plants", tags=["plant"])
 
@@ -14,8 +20,18 @@ router = APIRouter(prefix="/api/plants", tags=["plant"])
     summary="현재 키우고 있는 식물 조회",
     description="현재 키우고 있는 식물 정보를 조회합니다."
 )
-async def find_active_plant() -> FindActivePlantResponse:
-    raise NotImplementedError("Not supported yet.")
+async def find_active_plant(
+    current_user_id: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> FindActivePlantResponse:
+    result = await session.execute(
+        select(UserPlant)
+        .where(UserPlant.user_id == current_user_id, UserPlant.is_completed == False)
+    )
+    user_plant: UserPlant | None = result.scalar()
+    if user_plant is None:
+        return FindActivePlantResponse(active_plant=None)
+    return FindActivePlantResponse(active_plant=UserPlantResponse.model_validate(user_plant))
 
 
 @router.post(
@@ -31,9 +47,31 @@ async def find_active_plant() -> FindActivePlantResponse:
 )
 async def plant_plant(
     request: PlantPlantRequest,
-    current_user_id: int = Depends(get_current_user)
+    current_user_id: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ) -> ActivePlantResponse:
-    raise NotImplementedError("Not supported yet.")
+    result = await session.execute(
+        select(Plant).where(Plant.id == request.plant_id)
+    )
+    plant: Plant | None = result.scalar()
+
+    if plant is None:
+        raise HTTPException(status_code=404, detail="Plant not found.")
+
+    user_plant: UserPlant = UserPlant(
+        user_id=current_user_id,
+        plant_id=request.plant_id,
+        nickname=plant.name,
+        growth=0,
+        fruit_count=0,
+        is_completed=False,
+    )
+    session.add(user_plant)
+
+    await session.commit()
+    await session.flush()
+
+    return ActivePlantResponse(active_plant=UserPlantResponse.model_validate(user_plant))
 
 
 @router.post(
@@ -49,8 +87,38 @@ async def plant_plant(
 )
 async def harvest_active_plant_fruit(
     current_user_id: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ) -> HarvestFruitResponse:
-    raise NotImplementedError("Not supported yet.")
+    result = await session.execute(
+        select(User).where(User.id == current_user_id)
+    )
+    user: User | None = result.scalar()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    result = await session.execute(
+        select(UserPlant)
+        .where(UserPlant.user_id == current_user_id, UserPlant.is_completed == False)
+    )
+    user_plant: UserPlant | None = result.scalar()
+    if user_plant is None:
+        raise HTTPException(status_code=404, detail="Active plant not found.")
+
+    # 수확
+    user_plant.fruit_count -= 1
+    user.point += user_plant.plant.point_per_fruit
+
+    if user_plant.fruit_count <= 0:
+        user_plant.is_completed = True
+
+    await session.commit()
+
+    return HarvestFruitResponse(
+        points_earned=user_plant.plant.point_per_fruit,
+        remaining_fruit_count=user_plant.fruit_count,
+        current_user_point=user.point,
+        active_plant=UserPlantResponse.model_validate(user_plant)
+    )
 
 
 @router.put(
@@ -60,5 +128,19 @@ async def harvest_active_plant_fruit(
 )
 async def update_active_plant_nickname(
     request: UpdateActivePlantNicknameRequest,
+    current_user_id: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ) -> ActivePlantResponse:
-    raise NotImplementedError("Not supported yet.")
+    result = await session.execute(
+        select(UserPlant)
+        .where(UserPlant.user_id == current_user_id, UserPlant.is_completed == False)
+    )
+    user_plant: UserPlant | None = result.scalar()
+    if user_plant is None:
+        raise HTTPException(status_code=404, detail="Active plant not found.")
+
+    user_plant.nickname = request.nickname
+
+    await session.commit()
+
+    return ActivePlantResponse(active_plant=UserPlantResponse.model_validate(user_plant))

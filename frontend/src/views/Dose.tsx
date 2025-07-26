@@ -19,7 +19,6 @@ const Dose = () => {
 
   return (
     <div className='flex flex-col'>
-      <BackButton />
       <div className="my-8">
         <h2 className="text-2xl font-bold text-gray-900">
           오늘 점심 약 복용하셨나요?

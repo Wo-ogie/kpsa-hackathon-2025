@@ -31,12 +31,10 @@ export interface PrescriptionBase {
 // 약물 정보 모델
 export interface Medication {
   name: string;
-  dosage: string;
-  frequency: string;
-  duration: string;
-  instructions: string;
-  quantity?: string;
-  unit?: string;
+  dose_per_time: number;
+  times_per_day: number;
+  days: number;
+  ingredient?: string;
   extraFields?: Record<string, unknown>;
 }
 

@@ -22,6 +22,12 @@ import MedicationRecordAdd from '../views/MedicationRecordAdd'
 import AddMedicine from '../views/AddMedicine'
 import AddMedicineSearch from '../views/AddMedicineSearch'
 import AddMedicineDetail from '../views/AddMedicineDetail'
+import DrugCart from '../views/DrugCart'
+import NamingPrescription from '../views/NamingPrescription'
+import FamilyPhoneInput from '../views/FamilyPhoneInput'
+import FamilyNickname from '../views/FamilyNickname'
+import FamilyPermissions from '../views/FamilyPermissions'
+import Family from '../views/Family'
 
 export const router = createBrowserRouter([
   {
@@ -112,6 +118,48 @@ export const router = createBrowserRouter([
         element: <AddMedicineDetail />,
         handle: {
           title: '약 입력',
+        },
+      },
+      {
+        path: 'drug-cart',
+        element: <DrugCart />,
+        handle: {
+          title: '담은 약',
+        },
+      },
+      {
+        path: 'naming-prescription',
+        element: <NamingPrescription />,
+        handle: {
+          title: '처방전 이름',
+        },
+      },
+      {
+        path: 'family-phone-input',
+        element: <FamilyPhoneInput />,
+        handle: {
+          title: '가족 전화번호',
+        },
+      },
+      {
+        path: 'family-nickname',
+        element: <FamilyNickname />,
+        handle: {
+          title: '가족 닉네임',
+        },
+      },
+      {
+        path: 'family-permissions',
+        element: <FamilyPermissions />,
+        handle: {
+          title: '가족 권한',
+        },
+      },
+      {
+        path: 'family',
+        element: <Family />,
+        handle: {
+          title: '가족',
         },
       },
       {

@@ -75,6 +75,7 @@ export const usePrescription = () => {
     setError(null);
     try {
       const response = await prescriptionAPI.parsePrescription(text);
+      console.log(response);
       return response;
     } catch (err) {
       setError(err instanceof Error ? err.message : '처방전 분석 실패');
@@ -87,9 +88,9 @@ export const usePrescription = () => {
   const registerPrescription = useCallback(async (prescriptionData: {
     drugs: Array<{
       name: string;
-      dosage: string;
-      frequency: string;
-      duration: string;
+      dose_per_time: number;
+      times_per_day: number;
+      days: number;
     }>;
     hospital: string;
     doctor: string;

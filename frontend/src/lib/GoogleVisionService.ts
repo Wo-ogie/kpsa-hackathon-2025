@@ -34,7 +34,7 @@ export class GoogleVisionService {
     this.parserManager = new PrescriptionParserManager();
   }
 
-  async analyzePrescription(imageFile: File): Promise<OCRResult> {
+  async analyzePrescription(imageFile: File) {
     try {
       console.log('Google Vision API 분석 시작...');
 
@@ -51,123 +51,13 @@ export class GoogleVisionService {
       console.log('OCR 블록 변환 완료:', ocrBlocks.length);
 
       // 하이브리드 접근: 프론트엔드 기본 + 백엔드 정교 파싱
-      const result = await this.hybridParsing(ocrBlocks, base64Image, text);
-
-      return result;
+      return await this.sendToBackend(text);
 
     } catch (error) {
       console.error('Google Vision API 분석 실패:', error);
       return {
         success: false,
-        error: '처방전을 인식할 수 없습니다. 이미지가 선명한지 확인해주세요.',
-        confidence: 0,
-        rawText: '',
-        blocks: [],
-        type: {
-          type: 'unknown',
-          confidence: 0,
-          indicators: {
-            hasHospitalName: false,
-            hasPharmacyName: false,
-            hasDoctorName: false,
-            hasPharmacistName: false,
-            hasInsuranceInfo: false,
-            hasTableStructure: false
-          }
-        }
-      };
-    }
-  }
-
-  /**
-   * 하이브리드 파싱: 프론트엔드 기본 + 백엔드 정교
-   */
-  private async hybridParsing(ocrBlocks: OCRTextBlock[], base64Image: string, rawText: string): Promise<OCRResult> {
-    try {
-      // 1. 프론트엔드에서 기본 파싱 (빠른 응답)
-      const frontendResult = this.parserManager.parse(ocrBlocks);
-      console.log('프론트엔드 기본 파싱 완료:', frontendResult);
-
-      // 2. 백엔드로 전송하여 정교한 파싱 (선택적)
-      const backendResult = await this.sendToBackend(rawText);
-
-      if (backendResult && backendResult.success && backendResult.data) {
-        console.log('백엔드 정교 파싱 완료:', backendResult);
-        // 백엔드 결과를 Medication[]으로 변환
-        const backendMedications = backendResult.data;
-        return {
-          success: true,
-          data: {
-            ...frontendResult,
-            medications: backendMedications,
-          },
-          confidence: frontendResult.confidence,
-          rawText: rawText,
-          blocks: ocrBlocks,
-          type: {
-            type: frontendResult.sourceType,
-            confidence: frontendResult.confidence,
-            indicators: {
-              hasHospitalName: frontendResult.issuingPlace.includes('병원') || frontendResult.issuingPlace.includes('의원'),
-              hasPharmacyName: frontendResult.issuingPlace.includes('약국'),
-              hasDoctorName: frontendResult.prescriber.length > 0 && !frontendResult.prescriber.includes('약사'),
-              hasPharmacistName: frontendResult.prescriber.includes('약사'),
-              hasInsuranceInfo: !!frontendResult.insuranceType,
-              hasTableStructure: backendMedications.length > 0
-            }
-          }
-        };
-      }
-
-      // 3. 프론트엔드 결과 반환 (백엔드 실패 또는 프론트엔드가 더 정확한 경우)
-      const type: PrescriptionType = {
-        type: frontendResult.sourceType,
-        confidence: frontendResult.confidence,
-        indicators: {
-          hasHospitalName: frontendResult.issuingPlace.includes('병원') || frontendResult.issuingPlace.includes('의원'),
-          hasPharmacyName: frontendResult.issuingPlace.includes('약국'),
-          hasDoctorName: frontendResult.prescriber.length > 0 && !frontendResult.prescriber.includes('약사'),
-          hasPharmacistName: frontendResult.prescriber.includes('약사'),
-          hasInsuranceInfo: !!frontendResult.insuranceType,
-          hasTableStructure: frontendResult.medications.length > 0
-        }
-      };
-
-      return {
-        success: true,
-        data: frontendResult,
-        confidence: frontendResult.confidence,
-        rawText: rawText,
-        blocks: ocrBlocks,
-        type: type
-      };
-
-    } catch (error) {
-      console.error('하이브리드 파싱 중 오류:', error);
-
-      // 오류 시 프론트엔드 결과만 반환
-      const fallbackResult = this.parserManager.parse(ocrBlocks);
-
-      const type: PrescriptionType = {
-        type: fallbackResult.sourceType,
-        confidence: fallbackResult.confidence * 0.5, // 신뢰도 낮춤
-        indicators: {
-          hasHospitalName: fallbackResult.issuingPlace.includes('병원') || fallbackResult.issuingPlace.includes('의원'),
-          hasPharmacyName: fallbackResult.issuingPlace.includes('약국'),
-          hasDoctorName: fallbackResult.prescriber.length > 0 && !fallbackResult.prescriber.includes('약사'),
-          hasPharmacistName: fallbackResult.prescriber.includes('약사'),
-          hasInsuranceInfo: !!fallbackResult.insuranceType,
-          hasTableStructure: fallbackResult.medications.length > 0
-        }
-      };
-
-      return {
-        success: true,
-        data: fallbackResult,
-        confidence: fallbackResult.confidence * 0.5,
-        rawText: rawText,
-        blocks: ocrBlocks,
-        type: type
+        data: '처방전을 인식할 수 없습니다. 이미지가 선명한지 확인해주세요.',
       };
     }
   }
@@ -193,6 +83,7 @@ export class GoogleVisionService {
 
       const response = await prescriptionAPI.parsePrescription(rawText) as BackendPrescriptionParseResult;
       clearTimeout(timeoutId);
+
 
       const medications = response.drugs.map(mapBackendDrugToMedication);
       return { success: true, data: medications };

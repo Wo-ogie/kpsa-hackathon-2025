@@ -27,13 +27,12 @@ const AddMedicine = () => {
       console.log('OCR 결과:', result);
 
       // OCR 성공 시 약 검색 화면으로 이동하거나 결과를 표시
-      if (result.success && result.data) {
-        // 여기서 OCR 결과를 처리하거나 다음 화면으로 이동
-        navigate('/add-medicine-search', {
-          state: { ocrResult: result }
+      if (result && result.success) {
+        navigate('/drug-cart', {
+          state: { medications: result.data }
         });
       } else {
-        setError(result.error || '처방전을 인식할 수 없습니다.');
+        setError(typeof result?.data === 'string' ? result.data : '처방전을 인식할 수 없습니다.');
       }
     } catch (error) {
       console.error('OCR 분석 실패:', error);

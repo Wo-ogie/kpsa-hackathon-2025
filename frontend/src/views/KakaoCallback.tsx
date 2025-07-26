@@ -9,10 +9,12 @@ const KakaoCallback = () => {
     const code = new URL(window.location.href).searchParams.get("code");
 
     if (code) {
-      authAPI.loginWithKakao(code).then((res) => {
-        console.log(res);
-        navigate("/signup");
-      });
+      authAPI.loginWithKakao(code)
+        .then((res) => {
+          const response = res as { session_id: string };
+          localStorage.setItem('session_id', response.session_id);
+          navigate("/signup");
+        });
     }
   }, []);
 

@@ -15,9 +15,9 @@ import type { Medication } from './prescription';
 export function mapBackendDrugToMedication(drug: BackendDrug): Medication {
   return {
     name: drug.drug,
-    dosage: drug.dose_per_time,
-    frequency: drug.times_per_day,
-    duration: drug.days,
-    instructions: '',
+    dose_per_time: Number(drug.dose_per_time),
+    times_per_day: Number(drug.times_per_day),
+    days: Number(drug.days),
+    ingredient: '',
   };
 } 

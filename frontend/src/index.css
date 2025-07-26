@@ -1,6 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@font-face {
+  font-family: 'Pretendard-Regular';
+  src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+
 
 @layer base {
   :root {
@@ -24,6 +32,12 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+
+    /* 커스텀 색상 */
+    --peach-light: 248 100% 97%;
+    --peach-lighter: 248 100% 98%;
+    --orange-primary: 24 100% 50%;
+    --gray-light: 0 0% 97%;
   }
 
   .dark {
@@ -89,5 +103,165 @@
       -webkit-user-select: none;
       -webkit-touch-callout: none;
     }
+  }
+}
+
+@layer components {
+
+  /* 412px 기준 모바일 최적화 컴포넌트 */
+  .mobile-container {
+    @apply max-w-sm mx-auto;
+    width: 100%;
+    max-width: 412px;
+  }
+
+  .mobile-card {
+    @apply bg-white rounded-xl p-4 shadow-sm border border-gray-100;
+  }
+
+  .mobile-button {
+    @apply w-full h-12 text-base font-semibold rounded-xl shadow-lg;
+    min-height: 48px;
+    /* 터치 타겟 최소 크기 */
+  }
+
+  .mobile-text {
+    @apply text-sm leading-relaxed;
+  }
+
+  .mobile-heading {
+    @apply text-xl font-bold;
+  }
+
+  .mobile-subheading {
+    @apply text-base font-semibold;
+  }
+
+  .mobile-caption {
+    @apply text-xs text-gray-500;
+  }
+}
+
+@layer utilities {
+
+  /* 412px 기준 유틸리티 */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* 412px 기준 커스텀 스페이싱 */
+  .space-18 {
+    width: 4.5rem;
+    /* 72px */
+  }
+
+  .space-88 {
+    width: 22rem;
+    /* 352px */
+  }
+
+  .space-104 {
+    width: 26rem;
+    /* 416px */
+  }
+}
+
+/* 커스텀 색상 유틸리티 */
+@layer utilities {
+  .bg-peach-light {
+    background-color: #FEE2D0;
+  }
+
+  .bg-peach-lighter {
+    background-color: #FFF2E7;
+  }
+
+  .bg-orange-primary {
+    background-color: #FF6600;
+  }
+
+  .bg-gray-light {
+    background-color: #F7F7F7;
+  }
+
+  .text-peach-light {
+    color: #FEE2D0;
+  }
+
+  .text-peach-lighter {
+    color: #FFF2E7;
+  }
+
+  .text-orange-primary {
+    color: #FF6600;
+  }
+
+  .text-gray-light {
+    color: #F7F7F7;
+  }
+
+  .border-peach-light {
+    border-color: #FEE2D0;
+  }
+
+  .border-peach-lighter {
+    border-color: #FFF2E7;
+  }
+
+  .border-orange-primary {
+    border-color: #FF6600;
+  }
+
+  .border-gray-light {
+    border-color: #F7F7F7;
+  }
+}
+
+/* 412px 기준 브레이크포인트 */
+@media (min-width: 320px) {
+  .xs\:container {
+    max-width: 320px;
+  }
+}
+
+@media (min-width: 412px) {
+  .sm\:container {
+    max-width: 412px;
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .xl\:container {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .\2xl\:container {
+    max-width: 1536px;
   }
 }

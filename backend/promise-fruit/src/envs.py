@@ -17,6 +17,8 @@ class Envs(BaseSettings):
 
     KAKAO_REST_API_KEY: str
 
+    OPENAI_API_KEY: str
+
 
 @lru_cache
 def get_envs() -> Envs:

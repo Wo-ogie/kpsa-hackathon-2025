@@ -2,6 +2,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, ConfigDict
 
+"""
+Auth
+"""
+
 
 class KakaoLoginRequest(BaseModel):
     authorization_code: str = Field(..., description="카카오 '인가 코드 받기'를 통해 얻은 인가 코드")
@@ -18,6 +22,11 @@ class SignUpRequest(BaseModel):
     is_guardian: bool = Field(..., description="보호자인지 여부")
 
 
+"""
+User
+"""
+
+
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,3 +37,23 @@ class UserResponse(BaseModel):
     is_guardian: bool
     created_at: datetime
     updated_at: datetime
+
+
+"""
+Prescription
+"""
+
+
+class ParsePrescriptionRequest(BaseModel):
+    text: str = Field(..., description="OCR을 사용해 처방전에서 추출한 텍스트 데이터")
+
+
+class ParsePrescriptionResponse(BaseModel):
+    class DrugResponse(BaseModel):
+        drug: str = Field(..., description="약 이름")
+        dose: str | None = Field(None, description="용량")
+        dose_per_time: str | None = Field(None, description="1회 투약량")
+        times_per_day: str | None = Field(None, description="1일 투여 횟수")
+        days: str | None = Field(None, description="총 투약 일수")
+
+    drugs: list[DrugResponse] = Field(..., description="약 정보가 담긴 리스트")

@@ -5,8 +5,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 
-from src.client.base import init_async_client, close_async_client
+from src.client.async_client import init_async_client, close_async_client
 from src.router.auth_router import router as auth_router
+from src.router.prescription_router import router as prescription_router
 from src.router.user_router import router as user_router
 
 
@@ -27,6 +28,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(prescription_router)
 
 app.add_middleware(
     CORSMiddleware,

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth_session import SessionManager, get_session_manager, SESSION_COOKIE_NAME, get_current_user
-from src.client.base import get_async_client
+from src.client.async_client import get_async_client
 from src.database import get_session
 from src.entity import User
 from src.envs import get_envs, Envs

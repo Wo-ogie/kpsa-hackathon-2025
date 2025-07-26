@@ -132,7 +132,7 @@ class PrescriptionResponse(BaseModel):
 
 
 class PrescriptionsResponse(BaseModel):
-    prescriptions: list[PrescriptionResponse] = []
+    prescriptions: list[PrescriptionResponse]
 
 
 """

@@ -16,5 +16,8 @@ session_factory = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commi
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with session_factory() as session:
+    session = session_factory()
+    try:
         yield session
+    finally:
+        await session.close()

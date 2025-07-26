@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS `prescription_drug`;
+DROP TABLE IF EXISTS `prescription`;
 DROP TABLE IF EXISTS `user`;
 
 CREATE TABLE `user`
@@ -14,3 +16,28 @@ CREATE TABLE `user`
     PRIMARY KEY (`id`)
 );
 
+CREATE TABLE `prescription`
+(
+    `id`                    BIGINT      NOT NULL AUTO_INCREMENT,
+    `user_id`               BIGINT      NOT NULL,
+    `name`                  VARCHAR(50) NOT NULL,
+    `medication_start_date` DATE        NOT NULL,
+    `created_at`            TIMESTAMP   NOT NULL,
+    `updated_at`            TIMESTAMP   NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+);
+
+CREATE TABLE `prescription_drug`
+(
+    `id`              BIGINT      NOT NULL AUTO_INCREMENT,
+    `prescription_id` BIGINT      NOT NULL,
+    `name`            VARCHAR(50) NOT NULL,
+    `dose_per_time`   DOUBLE      NOT NULL,
+    `medication_time` VARCHAR(50) NOT NULL,
+    `count`           SMALLINT    NOT NULL,
+    `created_at`      TIMESTAMP   NOT NULL,
+    `updated_at`      TIMESTAMP   NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`prescription_id`) REFERENCES `prescription` (`id`)
+)

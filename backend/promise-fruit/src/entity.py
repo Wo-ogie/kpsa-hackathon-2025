@@ -1,8 +1,10 @@
-from datetime import datetime
+from datetime import datetime, date
 
-from sqlalchemy import DateTime, BigInteger, String, Integer, Boolean
+from sqlalchemy import DateTime, BigInteger, String, Integer, Boolean, Date, ForeignKey, Double
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+from src.constant import MedicationTime
 
 
 class BaseEntity(DeclarativeBase, AsyncAttrs):
@@ -32,3 +34,32 @@ class User(BaseEntity):
     is_guardian: Mapped[bool] = mapped_column("is_guardian", Boolean, nullable=False, default=False)
     kakao_uid: Mapped[str] = mapped_column("kakao_uid", String(255), nullable=False)
     fcm_token: Mapped[str] = mapped_column("fcm_token", String(255), nullable=False)
+
+
+class Prescription(BaseEntity):
+    __tablename__ = "prescription"
+
+    id: Mapped[int] = mapped_column("id", BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column("user_id", BigInteger, ForeignKey("user.id"), nullable=False)
+    name: Mapped[str] = mapped_column("name", String(50), nullable=False)
+    medication_start_date: Mapped[date] = mapped_column("medication_start_date", Date, nullable=False)
+
+    user: Mapped[User] = relationship("User", lazy="select")
+    drugs: Mapped[list["PrescriptionDrug"]] = relationship(
+        "PrescriptionDrug", lazy="selectin", back_populates="prescription", cascade="all, delete-orphan"
+    )
+
+
+class PrescriptionDrug(BaseEntity):
+    __tablename__ = "prescription_drug"
+
+    id: Mapped[int] = mapped_column("id", BigInteger, primary_key=True, autoincrement=True)
+    prescription_id: Mapped[int] = mapped_column(
+        "prescription_id", BigInteger, ForeignKey("prescription.id"), nullable=False
+    )
+    name: Mapped[str] = mapped_column("name", String(50), nullable=False)
+    dose_per_time: Mapped[float] = mapped_column("dose_per_time", Double, nullable=False)
+    medication_time: Mapped[MedicationTime] = mapped_column("medication_time", nullable=False)
+    count: Mapped[int] = mapped_column("count", Integer, nullable=False)
+
+    prescription: Mapped["Prescription"] = relationship("Prescription", lazy="select", back_populates="drugs")

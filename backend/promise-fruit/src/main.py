@@ -2,8 +2,9 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.staticfiles import StaticFiles
 
 from src.client.async_client import init_async_client, close_async_client
@@ -14,6 +15,7 @@ from src.router.user_router import router as user_router
 
 logging.basicConfig(level=logging.DEBUG)
 
+logger = logging.getLogger("api-logger")
 logging.getLogger("httpx").setLevel(logging.DEBUG)
 logging.getLogger("httpcore").setLevel(logging.DEBUG)
 
@@ -45,6 +47,38 @@ app.add_middleware(
     allow_methods=["*"],  # 모든 HTTP 메서드 허용
     allow_headers=["*"],  # 모든 HTTP 헤더 허용
 )
+
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # 요청 정보 로깅
+        req_body = await request.body()
+        logger.info(
+            f"Request: {request.method} {request.url} "
+            f"Headers: {dict(request.headers)} "
+            f"Body: {req_body.decode('utf-8', 'ignore')}"
+        )
+        # 응답 정보 로깅
+        response = await call_next(request)
+        resp_body = b""
+        async for chunk in response.body_iterator:
+            resp_body += chunk
+
+        logger.info(
+            f"Response: {request.method} {request.url} "
+            f"Status: {response.status_code} "
+            f"Body: {resp_body.decode('utf-8', 'ignore')}"
+        )
+        # 응답 본문 재설정
+        return Response(
+            content=resp_body,
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            media_type=response.media_type,
+        )
+
+
+app.add_middleware(LoggingMiddleware)
 
 
 @app.get("/")

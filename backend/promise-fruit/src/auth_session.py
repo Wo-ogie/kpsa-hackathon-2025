@@ -13,7 +13,7 @@ class SessionManager:
         self.sessions[session_id] = user_id
         return session_id
 
-    def get_session(self, session_id: str) -> int | None:
+    def find_session(self, session_id: str) -> int | None:
         return self.sessions.get(session_id)
 
     def delete_session(self, session_id: str):
@@ -34,7 +34,7 @@ def get_current_user(
 ) -> int:
     if not session_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    user_id: int | None = session_manager.get_session(session_id)
+    user_id: int | None = session_manager.find_session(session_id)
     if not user_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return user_id

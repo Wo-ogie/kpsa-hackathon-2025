@@ -46,7 +46,7 @@ async def kakao_login(
     response = await client.post(
         url="https://kauth.kakao.com/oauth/token",
         headers={"Content-Type": "application/x-www-form-urlencoded;charset=utf-8"},
-        json={
+        params={
             "grant_type": "authorization_code",
             "client_id": envs.KAKAO_REST_API_KEY,
             "redirect_uri": request.redirect_url,
@@ -57,7 +57,7 @@ async def kakao_login(
 
     # 카카오 유저 정보 조회
     response = await client.get(
-        url="https://kauth.kakao.com/v2/user/me",
+        url="https://kapi.kakao.com/v2/user/me",
         headers={
             "Authorization": f"Bearer {kakao_access_token}",
             "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
@@ -160,4 +160,7 @@ async def _create_session_and_set_cookie(response: Response, session_manager: Se
         value=session_id,
         httponly=True,
         max_age=3600,
+        samesite="lax",
+        secure=False,
+        path="/"
     )

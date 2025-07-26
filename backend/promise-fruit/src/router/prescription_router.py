@@ -3,9 +3,16 @@ import json
 
 from fastapi import APIRouter, Response, Depends
 from openai import OpenAI
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from client.open_ai_client import get_openai_client
-from src.schema import ParsePrescriptionRequest, ParsePrescriptionResponse
+from src.auth_session import get_current_user
+from src.client.open_ai_client import get_openai_client
+from src.constant import MedicationTime
+from src.database import get_session
+from src.entity import Prescription, PrescriptionDrug
+from src.schema import (
+    ParsePrescriptionRequest, ParsePrescriptionResponse, CreatePrescriptionRequest, PrescriptionResponse
+)
 
 PARSE_PRESCRIPTION_TEMPLATE: str = """OCR로 추출한 처방전 텍스트 데이터가 주어집니다.
     약명, 1회 복용량, 1일 복용 횟수, 복용 일수 등이 한 행씩 나올 수도 있고, 숫자가 따로 떨어져 있을 수도 있습니다.
@@ -45,3 +52,84 @@ async def parse_prescriptions(
         for item in json.loads(llm_response.output_text)
     ]
     return ParsePrescriptionResponse(drugs=drugs)
+
+
+@router.post(
+    path="",
+    summary="처방전 등록",
+    description="처방전 정보를 등록합니다."
+)
+async def create_prescription(
+    request: CreatePrescriptionRequest,
+    current_user_id: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> PrescriptionResponse:
+    prescription: Prescription = Prescription(
+        user_id=current_user_id,
+        name=request.name,
+        medication_start_date=request.medication_start_date,
+    )
+    session.add(prescription)
+    await session.flush()
+
+    prescription_drugs = []
+    for drug_req in request.drugs:
+        match drug_req.times_per_day:
+            case 1:
+                prescription_drugs.append(
+                    PrescriptionDrug(
+                        prescription_id=prescription.id,
+                        name=drug_req.name,
+                        dose_per_time=drug_req.dose_per_time,
+                        medication_time=MedicationTime.NOON,
+                        count=drug_req.days
+                    )
+                )
+            case 2:
+                prescription_drugs.extend([
+                    PrescriptionDrug(
+                        prescription_id=prescription.id,
+                        name=drug_req.name,
+                        dose_per_time=drug_req.dose_per_time,
+                        medication_time=MedicationTime.MORNING,
+                        count=drug_req.days
+                    ),
+                    PrescriptionDrug(
+                        prescription_id=prescription.id,
+                        name=drug_req.name,
+                        dose_per_time=drug_req.dose_per_time,
+                        medication_time=MedicationTime.EVENING,
+                        count=drug_req.days
+                    )
+                ])
+            case 3:
+                prescription_drugs.extend([
+                    PrescriptionDrug(
+                        prescription_id=prescription.id,
+                        name=drug_req.name,
+                        dose_per_time=drug_req.dose_per_time,
+                        medication_time=MedicationTime.MORNING,
+                        count=drug_req.days
+                    ),
+                    PrescriptionDrug(
+                        prescription_id=prescription.id,
+                        name=drug_req.name,
+                        dose_per_time=drug_req.dose_per_time,
+                        medication_time=MedicationTime.NOON,
+                        count=drug_req.days
+                    ),
+                    PrescriptionDrug(
+                        prescription_id=prescription.id,
+                        name=drug_req.name,
+                        dose_per_time=drug_req.dose_per_time,
+                        medication_time=MedicationTime.EVENING,
+                        count=drug_req.days
+                    )
+                ])
+    session.add_all(prescription_drugs)
+
+    await session.commit()
+    await session.refresh(prescription)
+
+    await prescription.awaitable_attrs.drugs
+    return PrescriptionResponse.model_validate(prescription)

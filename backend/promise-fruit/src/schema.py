@@ -57,3 +57,12 @@ class ParsePrescriptionResponse(BaseModel):
         days: str | None = Field(None, description="총 투약 일수")
 
     drugs: list[DrugResponse] = Field(..., description="약 정보가 담긴 리스트")
+
+
+"""
+Drug
+"""
+
+
+class SearchDrugNamesResponse(BaseModel):
+    drug_names: list[str] = Field(..., description="약 이름")

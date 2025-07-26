@@ -4,7 +4,7 @@ import json
 from fastapi import APIRouter, Response, Depends
 from openai import OpenAI
 
-from client.open_ai import get_openai_client
+from client.open_ai_client import get_openai_client
 from src.schema import ParsePrescriptionRequest, ParsePrescriptionResponse
 
 PARSE_PRESCRIPTION_TEMPLATE: str = """OCR로 추출한 처방전 텍스트 데이터가 주어집니다.

@@ -16,8 +16,8 @@ class Envs(BaseSettings):
     ACCESS_TOKEN_DURATION_MINUTES: int
 
     KAKAO_REST_API_KEY: str
-
     OPENAI_API_KEY: str
+    GGDATA_API_KEY: str
 
 
 @lru_cache

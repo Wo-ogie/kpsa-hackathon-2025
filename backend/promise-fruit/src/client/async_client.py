@@ -1,3 +1,6 @@
+import ssl
+
+import httpx
 from httpx import AsyncClient
 
 _async_client: AsyncClient | None = None
@@ -7,7 +10,19 @@ def init_async_client() -> None:
     global _async_client
     if _async_client is not None:
         raise RuntimeError("Async client is already initialized")
-    _async_client = AsyncClient(verify=False)
+
+    # SSL 컨텍스트 생성 및 설정
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    # 더 관대한 SSL 설정
+    ssl_context.set_ciphers('DEFAULT@SECLEVEL=1')
+
+    _async_client = AsyncClient(
+        verify=ssl_context,
+        timeout=30.0,
+        limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
+    )
 
 
 async def close_async_client() -> None:

@@ -182,11 +182,32 @@ class UserPlantResponse(BaseModel):
 class ActivePlantResponse(BaseModel):
     active_plant: UserPlantResponse = Field(..., description="현재 키우고 있는 식물 정보")
 
+
 class FindActivePlantResponse(BaseModel):
     active_plant: UserPlantResponse | None = Field(..., description="현재 키우고 있는 식물 정보. 없는 경우 `null`")
+
 
 class HarvestFruitResponse(BaseModel):
     points_earned: int = Field(..., description="획득한 포인트")
     remaining_fruit_count: int = Field(..., description="수확 후 남은 열매 개수")
     current_user_point: int = Field(..., description="수확 후 사용자 총 포인트")
     active_plant: UserPlantResponse = Field(..., description="수확 후 키우고 있는 식물 정보")
+
+
+"""
+Medication
+"""
+
+
+class MedicationHistoryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="복용 기록 ID")
+    prescription: PrescriptionResponse = Field(..., description="복용한 처방전 정보")
+    medication_time: MedicationTime = Field(..., description="복용 시간")
+    created_at: datetime = Field(..., description="생성 시각")
+    updated_at: datetime = Field(..., description="수정 시각")
+
+
+class MedicationHistoriesResponse(BaseModel):
+    histories: list[MedicationHistoryResponse] = Field(..., description="복용 기록 목록")

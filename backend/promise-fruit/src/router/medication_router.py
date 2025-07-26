@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,13 +8,55 @@ from src.auth_session import get_current_user
 from src.database import get_session
 from src.entity import Plant
 from src.entity import Prescription, MedicationHistory, UserPlant
-from src.schema import MedicationVerificationRequest, MedicationVerificationResponse, UserPlantResponse
+from src.schema import (
+    MedicationVerificationRequest, MedicationVerificationResponse, UserPlantResponse, MedicationHistoriesResponse,
+    MedicationHistoryResponse
+)
 
-router = APIRouter(prefix="/api/medications", tags=["medication"])
+router = APIRouter(prefix="/api", tags=["medication"])
+
+
+@router.get(
+    path="/users/me/medication-histories",
+    summary="내 복용 기록 조회",
+    description="내 복용 기록을 조회합니다."
+)
+async def find_my_medication_histories(
+    current_user_id: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> MedicationHistoriesResponse:
+    result = await session.execute(
+        select(MedicationHistory).where(MedicationHistory.user_id == current_user_id)
+    )
+    histories: list[MedicationHistory] = result.unique().scalars().all()
+
+    return MedicationHistoriesResponse(
+        histories=[MedicationHistoryResponse.model_validate(history) for history in histories]
+    )
+
+
+@router.get(
+    path="/users/{user_id}/medication-histories",
+    summary="복용 기록 조회",
+    description="유저의 복용 기록을 조회합니다."
+)
+async def find_my_medication_histories(
+    user_id: Annotated[int, Path],
+    _: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    result = await session.execute(
+        select(MedicationHistory).where(MedicationHistory.user_id == user_id)
+    )
+    histories: list[MedicationHistory] = result.unique().scalars().all()
+
+    return MedicationHistoriesResponse(
+        histories=[MedicationHistoryResponse.model_validate(history) for history in histories]
+    )
 
 
 @router.post(
-    path="/verify",
+    path="/medications/verify",
     summary="복용 인증",
     description="약을 복용했음을 인증하고, 현재 키우고 있는 식물의 성장도를 증가시킵니다.",
     responses={

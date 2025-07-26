@@ -1,36 +1,37 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Medication } from '../types/prescription';
+import { useEffect, useState } from 'react';
 
 const DrugCart = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const medications: Medication[] = location.state?.medications || [];
+  const [medications, setMedications] = useState<Medication[]>([]);
+
   const handleAddMedication = () => {
-    navigate('/add-medicine');
+    navigate('/add-medicine-search');
   };
 
   const handleRemoveDrug = (index: number) => {
-    // medications 배열을 직접 수정하는 대신 상태 업데이트 로직 필요
     console.log('Remove medication at index:', index);
   };
 
   const handleNext = () => {
-    console.log('medications', medications)
+    console.log('medications', medications);
     navigate('/naming-prescription', {
       state: { medications: medications }
     });
   };
 
-  const getStatusIcon = (hasWarning: boolean) => {
-    if (hasWarning) {
-      return (
-        <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-      );
+
+  useEffect(() => {
+    const medications = localStorage.getItem('medications');
+    if (medications) {
+      setMedications([...(location.state?.medications || []), ...JSON.parse(medications)]);
+    } else {
+      setMedications(location.state?.medications || []);
     }
-    return (
-      <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-    );
-  };
+
+  }, []);
 
   return (
     <div className="bg-white ">
@@ -41,8 +42,10 @@ const DrugCart = () => {
               <div className="flex items-center space-x-3">
 
                 <div>
-                  <h3 className="font-semibold text-gray-900">{medication.name}</h3>
-                  <p className="text-sm text-gray-500">{medication.ingredient}</p>
+                  <h3 className="font-semibold text-gray-900 max-w-[180px]">{medication.name}</h3>
+                  <p className="text-sm text-gray-500">
+                    {medication.dose_per_time}정 x {medication.times_per_day}회 x {medication.days}일
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">

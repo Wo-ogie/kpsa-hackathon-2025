@@ -3,28 +3,35 @@ import React from 'react';
 interface CheckBoxProps {
   id: string;
   checked: boolean;
-  onChange: () => void;
+  onChange: () => void; // id 파라미터 제거
   label: string;
   className?: string;
 }
 
 const CheckBox: React.FC<CheckBoxProps> = ({ id, checked, onChange, label, className = '' }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onChange(); // 부모에서 전달받은 함수 호출
+  };
+
   return (
-    <div className={`flex text-xl items-center font-bold space-x-3 p-4 bg-gray-100 rounded-full ${className}`}>
+    <div
+      className={`flex text-xl items-center font-bold space-x-3 p-4 bg-gray-100 rounded-full cursor-pointer ${className}`}
+      onClick={handleClick}
+    >
       <div className="relative">
         <input
           type="checkbox"
           id={id}
           checked={checked}
-          onChange={onChange}
+          onChange={onChange} // input의 onChange도 연결
           className="sr-only"
         />
         <div
           className={`w-5 h-5 border-2 rounded-full cursor-pointer flex items-center justify-center ${checked
             ? 'bg-orange-primary border-orange-primary'
-            : 'border-gray-500 '
+            : 'border-gray-500'
             }`}
-          onClick={onChange}
         >
           {checked && (
             <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">

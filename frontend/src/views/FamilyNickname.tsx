@@ -30,7 +30,6 @@ const FamilyNickname = () => {
 
   return (
     <div className="min-h-screen flex flex-col mobile-container safe-area-top safe-area-bottom px-6">
-      <BackButton />
 
       <div className="flex-1 flex flex-col justify-center">
         <div className="mb-12">
@@ -63,7 +62,7 @@ const FamilyNickname = () => {
         </div>
       </div>
 
-      <div className="pb-8">
+      <div className="fixed bottom-20 left-0 right-0 p-4">
         <Button
           onClick={handleNext}
           disabled={!isButtonActive}

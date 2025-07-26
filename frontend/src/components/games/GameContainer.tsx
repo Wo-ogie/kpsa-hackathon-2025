@@ -1,199 +1,243 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { plantAPI } from '../../lib/api';
+import { ActivePlant, HarvestFruitResponse, Plant } from '@/types/plant';
+import Toast from '../../components/ui/toast';
 
 interface GameContainerProps {
   isGrown: boolean;
   onGrownChange: (grown: boolean) => void;
+  onAppleHarvest?: () => void;
 }
 
-const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange }) => {
+const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange, onAppleHarvest }) => {
   const [waterDrops, setWaterDrops] = useState<Array<{ id: number; x: number; y: number }>>([]);
-  const [isWatering, setIsWatering] = useState(false);
   const [waterCount, setWaterCount] = useState(0);
   const [showGrowthAnimation, setShowGrowthAnimation] = useState(false);
+  const [treeSize, setTreeSize] = useState(0)
   const [apples, setApples] = useState<Array<{ id: number; x: number; y: number; isDropping: boolean }>>([]);
   const [appleCount, setAppleCount] = useState(0);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastPoints, setToastPoints] = useState(0);
+  const [isTreeShrinking, setIsTreeShrinking] = useState(false);
   const treeRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const dropIdCounter = useRef(0);
-  const appleIdCounter = useRef(0);
+  const appleIdCounter = useRef(0)
+  const [activePlant, setActivePlant] = useState<ActivePlant | null>(null);
 
-  const GROWTH_THRESHOLD = 5;
   const MAX_APPLES = 3;
+
+  // activePlant의 id와 growth에 따라 이미지 경로를 결정하는 함수
+  const getTreeImagePath = () => {
+    if (!activePlant || !activePlant.plant) return "/assets/tree_sm.png";
+
+    const { plant, growth } = activePlant;
+
+    // 축소 애니메이션 중에는 작은 나무 이미지 반환
+    if (isTreeShrinking) {
+      return "/assets/tree_sm.png";
+    }
+
+    if (plant.id === 1) {
+      return growth === 100 ? "/assets/tree.png" : "/assets/tree_sm.png";
+    } else if (plant.id === 2) {
+      return growth === 100 ? "/assets/pear_tree.png" : "/assets/tree_sm.png";
+    }
+
+    // 기본값
+    return "/assets/tree_sm.png";
+  };
 
   // Tree shaking animation on mount
   useEffect(() => {
+    const activePlant = localStorage.getItem('activePlant');
+    if (activePlant) {
+      const plant = JSON.parse(activePlant) as ActivePlant;
+      setActivePlant(plant);
+    }
     if (treeRef.current) {
-      treeRef.current.classList.add('animate-pulse');
+      // treeRef.current.classList.add('animate-pulse');
     }
   }, []);
 
-  // Initialize apples when tree grows
+  // Initialize apples when tree grows (only for apple tree - id 1 with growth 100)
   useEffect(() => {
-    if (isGrown && appleCount === 0) {
-      const initialApples = [];
-      for (let i = 0; i < MAX_APPLES; i++) {
-        initialApples.push({
+    const shouldShowApples = activePlant?.plant?.id === 1 && activePlant?.growth === 100;
+
+    console.log('shouldShowApples', shouldShowApples, apples);
+    if (shouldShowApples && apples.length === 0) {
+      const initialApples = [
+        {
           id: appleIdCounter.current++,
-          x: 120 + (i - 1) * 30, // Spread apples horizontally around center
-          y: 180 + Math.random() * 20, // Slightly random vertical position
+          x: 140, // 나무 상단 중앙 (약간 오른쪽)
+          y: 60,
           isDropping: false
-        });
-      }
-      setApples(initialApples);
-      setAppleCount(MAX_APPLES);
-    }
-  }, [isGrown, appleCount]);
-
-  const handleTreeClick = (event: React.MouseEvent<HTMLImageElement>) => {
-    if (isWatering || showGrowthAnimation) return;
-
-    const containerRect = containerRef.current?.getBoundingClientRect();
-
-    if (containerRect) {
-      // Calculate click position relative to container
-      const x = event.clientX - containerRect.left;
-      const y = event.clientY - containerRect.top;
-
-      // If tree is grown and we haven't reached max apples, drop an apple
-      if (isGrown && appleCount < MAX_APPLES) {
-        const newApple = {
+        },
+        {
           id: appleIdCounter.current++,
-          x: x + (Math.random() - 0.5) * 60, // Random position around click
-          y: y - 30, // Start above click point
-          isDropping: true
-        };
-
-        setApples(prev => [...prev, newApple]);
-        setAppleCount(prev => prev + 1);
-
-        // Add shake animation to tree
-        if (treeRef.current) {
-          treeRef.current.classList.add('animate-bounce');
-          setTimeout(() => {
-            treeRef.current?.classList.remove('animate-bounce');
-          }, 600);
+          x: 80, // 나무 왼쪽 가지
+          y: 90,
+          isDropping: false
+        },
+        {
+          id: appleIdCounter.current++,
+          x: 160, // 나무 오른쪽 가지
+          y: 100,
+          isDropping: false
         }
+      ];
+      setApples(initialApples);
+      setAppleCount(activePlant?.fruit_count || 0);
+    } else if (!shouldShowApples) {
+      setApples([]);
+      setAppleCount(0);
+    }
+  }, [activePlant]);
 
-        // Stop dropping animation after drop completes
+
+
+  const handleAppleClick = (appleId: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // 나무 클릭 이벤트 방지
+
+    const clickedApple = apples.find(apple => apple.id === appleId);
+    if (!clickedApple || clickedApple.isDropping) return;
+
+    // 사과 떨어뜨리기 애니메이션 시작
+    setApples(prev =>
+      prev.map(apple =>
+        apple.id === appleId ? { ...apple, isDropping: true } : apple
+      )
+    );
+
+    // 수확 콜백 호출
+    if (onAppleHarvest) {
+      setTimeout(() => {
+        onAppleHarvest();
+      }, 800);
+    }
+
+    // 사과 제거 (애니메이션 완료 후)
+    setTimeout(() => {
+      setApples(prev => prev.filter(apple => apple.id !== appleId));
+      setAppleCount(prev => prev - 1);
+    }, 1000);
+
+    // API 호출 (주석 해제하여 사용)
+    plantAPI.harvestFruit().then((res: HarvestFruitResponse) => {
+      console.log('수확 완료:', res);
+      // 토스트 메시지 표시 points_earned , current_user_point
+      setShowToast(true);
+      setToastMessage(`사과를 수확해서 총`);
+      setToastPoints(res.points_earned);
+      localStorage.setItem('point', res.current_user_point.toString());
+      localStorage.setItem('activePlant', JSON.stringify(res.active_plant));
+      if (res.remaining_fruit_count === 0) {
+        // 나무 축소 애니메이션 시작
+        setIsTreeShrinking(true);
+
+        // 1초 후 나무 축소 완료
         setTimeout(() => {
-          setApples(prev =>
-            prev.map(apple =>
-              apple.id === newApple.id ? { ...apple, isDropping: false } : apple
-            )
-          );
-        }, 800);
-
-        return;
-      }
-
-      // If not grown, continue with watering logic
-      if (!isGrown) {
-        setIsWatering(true);
-
-        // Create multiple water drops for better effect
-        const newDrops: Array<{ id: number, x: number, y: number }> = [];
-        for (let i = 0; i < 3; i++) {
-          newDrops.push({
-            id: dropIdCounter.current++,
-            x: x + (Math.random() - 0.5) * 40, // Spread drops around click point
-            y: y - 20 + (Math.random() - 0.5) * 20
-          });
-        }
-
-        setWaterDrops(prev => [...prev, ...newDrops]);
-
-        // Increment water count
-        const newWaterCount = waterCount + 1;
-        setWaterCount(newWaterCount);
-
-        // Add extra shake to tree when watered
-        if (treeRef.current) {
-          treeRef.current.classList.add('animate-bounce');
-          setTimeout(() => {
-            treeRef.current?.classList.remove('animate-bounce');
-          }, 600);
-        }
-
-        // Check if plant should grow
-        if (newWaterCount >= GROWTH_THRESHOLD && !isGrown) {
-          setTimeout(() => {
-            setShowGrowthAnimation(true);
-            setTimeout(() => {
-              onGrownChange(true);
-              setShowGrowthAnimation(false);
-            }, 1500); // Growth animation duration
-          }, 1000); // Wait for water animation to finish
-        }
-
-        // Remove water drops after animation
-        setTimeout(() => {
-          setWaterDrops(prev => prev.filter(drop => !newDrops.find(newDrop => newDrop.id === drop.id)));
-          setIsWatering(false);
+          localStorage.removeItem('activePlant');
+          plantAPI.getActivePlants()
+            .then((res: { active_plant: boolean | Plant }) => {
+              if (!res.active_plant) {
+                plantAPI.plantTree(1).then((res: any) => {
+                  console.log('res', res);
+                  // 새로운 나무는 growth: 0이므로 작은 상태 유지
+                  setIsTreeShrinking(false);
+                  setActivePlant(res);
+                });
+              } else {
+                const plant = res.active_plant as any;
+                localStorage.setItem('activePlant', JSON.stringify(plant));
+                // 새로운 나무는 growth: 0이므로 작은 상태 유지
+                setIsTreeShrinking(false);
+                setActivePlant(plant);
+              }
+            });
         }, 1000);
       }
-    }
+    });
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4" style={{ height: 'calc(100vh - 200px)' }}>
-      <div className="flex flex-col items-center">
-        <div className="relative w-full max-w-md" ref={containerRef}>
-          <div className="relative flex justify-center mb-6">
+    <div className="min-h-[250px] overflow-y-auto px-4 flex items-center justify-center" >
+      <Toast
+        message={toastMessage}
+        points={toastPoints}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
+      <div className="relative" ref={containerRef}>
+        <div className="relative flex justify-center">
+          <img
+            ref={treeRef}
+            src={getTreeImagePath()}
+            alt={activePlant?.growth === 100 ? "Grown Tree" : "Small Tree"}
+            className={`transition-all duration-1000 ease-in-out z-10 ${
+              // 나무 크기에 따른 클래스 적용 (growth가 100이면 큰 나무, 아니면 작은 나무)
+              isTreeShrinking ? 'w-12 h-auto' : (activePlant?.growth === 100 ? 'w-48 h-auto' : 'w-12 h-auto')
+              } ${showGrowthAnimation ? 'animate-pulse' : '' // 성장 중일 때 깜빡임 효과
+              }`}
+          />
+
+          {/* Water drops */}
+          {waterDrops.map(drop => (
             <img
-              ref={treeRef}
-              src={isGrown ? "/assets/tree.png" : "/assets/tree.png"}
-              alt={isGrown ? "Tree" : "Sprout"}
-              className={`w-48 h-auto cursor-pointer transition-transform duration-100 ease-in-out z-10 hover:scale-105 ${showGrowthAnimation ? 'scale-110' : ''
-                }`}
-              onClick={handleTreeClick}
+              key={drop.id}
+              src="/images/water_drop.png"
+              alt="Water Drop"
+              className="absolute w-6 h-6 pointer-events-none z-30 animate-bounce"
+              style={{
+                left: `${drop.x}px`,
+                top: `${drop.y}px`
+              }}
             />
+          ))}
 
-            {/* Water drops */}
-            {waterDrops.map(drop => (
-              <img
-                key={drop.id}
-                src="/assets/water_drop.png"
-                alt="Water Drop"
-                className="absolute w-6 h-6 pointer-events-none z-30 animate-bounce"
-                style={{
-                  left: `${drop.x}px`,
-                  top: `${drop.y}px`
-                }}
-              />
-            ))}
+          {activePlant?.plant?.id === 1 && activePlant?.growth === 100 && !isTreeShrinking && apples.map(apple => (
+            <div
+              key={apple.id}
+              className={`absolute w-8 h-8 cursor-pointer hover:scale-110 transition-all duration-1000 z-30 ${apple.isDropping ? 'animate-bounce' : ''
+                }`}
+              style={{
+                left: `${apple.x - 12}px`,
+                top: apple.isDropping ? `${apple.y + 50}px` : `${apple.y - 20}px`,
+                transform: apple.isDropping ? 'rotate(180deg)' : 'rotate(0deg)',
+              }}
+              onClick={(e) => handleAppleClick(apple.id, e)}
+            >
+              <img src="/assets/apple.svg" alt="Apple" className="w-full h-full" />
+            </div>
+          ))}
 
-            {/* Apples */}
-            {apples.map(apple => (
-              <img
-                key={apple.id}
-                src="/assets/apple.svg"
-                alt="Apple"
-                className={`absolute w-8 h-8 pointer-events-none z-20 transition-all duration-800 ease-in-out ${apple.isDropping ? 'animate-bounce' : ''
-                  }`}
-                style={{
-                  left: `${apple.x}px`,
-                  top: `${apple.y}px`,
-                  transform: apple.isDropping ? 'translateY(60px) rotate(360deg)' : 'translateY(0) rotate(0deg)'
-                }}
-              />
-            ))}
-
-            {/* Growth celebration */}
-            {showGrowthAnimation && (
-              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50">
-                <div className="absolute -left-8 -top-4 text-2xl animate-ping">✨</div>
-                <div className="absolute left-4 -top-6 text-2xl animate-ping" style={{ animationDelay: '0.3s' }}>🌟</div>
-                <div className="absolute -left-4 top-4 text-2xl animate-ping" style={{ animationDelay: '0.6s' }}>✨</div>
-                <div className="absolute left-1/2 -top-12 transform -translate-x-1/2 bg-gradient-to-r from-red-400 to-yellow-400 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg animate-bounce">
-                  성장했어요!
+          {/* Growth celebration - 단계별 성장 축하 애니메이션 */}
+          {showGrowthAnimation && (
+            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50">
+              {/* 1단계 성장 축하 (중간 나무) */}
+              {treeSize === 'medium' && (
+                <div className="absolute left-1/2 -top-8 transform -translate-x-1/2 bg-gradient-to-r from-green-400 to-blue-400 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg animate-bounce">
+                  자라나고 있어요! 🌱
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+
+              {/* 2단계 성장 축하 (큰 나무) */}
+              {treeSize === 'large' && (
+                <>
+                  <div className="absolute -left-8 -top-4 text-2xl animate-ping">✨</div>
+                  <div className="absolute left-4 -top-6 text-2xl animate-ping" style={{ animationDelay: '0.3s' }}>🌟</div>
+                  <div className="absolute -left-4 top-4 text-2xl animate-ping" style={{ animationDelay: '0.6s' }}>✨</div>
+                  <div className="absolute left-1/2 -top-12 transform -translate-x-1/2 bg-gradient-to-r from-red-400 to-yellow-400 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg animate-bounce">
+                    성장했어요! 🌳
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default GameContainer; 
+export default GameContainer;

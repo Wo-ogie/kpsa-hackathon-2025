@@ -91,4 +91,35 @@ export interface UploadedImage {
   file: File;
   preview: string;
   id: string;
-} 
+}
+
+
+export interface Prescription {
+  id: number;
+  user_id: number;
+  name: string;
+  medication_start_date: string;
+  drugs: Array<Drug>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Drug {
+  id: number;
+  name: string;
+  dose_per_time: number;
+  medication_time: "MORNING" | "LUNCH" | "EVENING"; // 복용 시간 타입 명시
+  count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PrescriptionResponse {
+  id: number;
+  user_id: number;
+  name: string;
+  medication_start_date: string;
+  drugs: Array<Drug>;
+  created_at: string;
+  updated_at: string;
+}

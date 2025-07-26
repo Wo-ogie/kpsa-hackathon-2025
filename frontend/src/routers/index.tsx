@@ -19,6 +19,7 @@ import MedicationDetail from '../views/MedicationDetail'
 import MedicationRecord from '../views/MedicationRecord'
 import MedicationRecordCalendar from '../views/MedicationRecordCalendar'
 import MedicationRecordAdd from '../views/MedicationRecordAdd'
+import MedicationHistory from '../views/MedicationHistory'
 import AddMedicine from '../views/AddMedicine'
 import AddMedicineSearch from '../views/AddMedicineSearch'
 import AddMedicineDetail from '../views/AddMedicineDetail'
@@ -28,6 +29,7 @@ import FamilyPhoneInput from '../views/FamilyPhoneInput'
 import FamilyNickname from '../views/FamilyNickname'
 import FamilyPermissions from '../views/FamilyPermissions'
 import Family from '../views/Family'
+import SetMedicineDetail from '../views/SetMedicineDetail'
 
 export const router = createBrowserRouter([
   {
@@ -93,10 +95,10 @@ export const router = createBrowserRouter([
         },
       },
       {
-        path: 'medication-list',
-        element: <MedicationList />,
+        path: 'add-medicine/:family_id',
+        element: <AddMedicine />,
         handle: {
-          title: '복약 리스트',
+          title: '약 추가',
         },
       },
       {
@@ -163,6 +165,13 @@ export const router = createBrowserRouter([
         },
       },
       {
+        path: 'set-medicine-detail',
+        element: <SetMedicineDetail />,
+        handle: {
+          title: '약 입력',
+        },
+      },
+      {
         path: 'medication-info',
         element: <MedicationInfo />,
         handle: {
@@ -170,7 +179,7 @@ export const router = createBrowserRouter([
         },
       },
       {
-        path: 'medication-detail',
+        path: 'medication-detail/:id',
         element: <MedicationDetail />,
         handle: {
           title: '나의 복약 정보',
@@ -195,6 +204,13 @@ export const router = createBrowserRouter([
         element: <MedicationRecordAdd />,
         handle: {
           title: '나의 복약 기록',
+        },
+      },
+      {
+        path: 'medication-history',
+        element: <MedicationHistory />,
+        handle: {
+          title: '복약 히스토리',
         },
       },
       {

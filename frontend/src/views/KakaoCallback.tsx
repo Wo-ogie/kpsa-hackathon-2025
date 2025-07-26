@@ -11,8 +11,8 @@ const KakaoCallback = () => {
     if (code) {
       authAPI.loginWithKakao(code)
         .then((res) => {
-          const response = res as { session_id: string };
-          localStorage.setItem('session_id', response.session_id);
+          const response = res as { id: number };
+          localStorage.setItem('userId', response.id.toString());
           navigate("/signup");
         });
     }

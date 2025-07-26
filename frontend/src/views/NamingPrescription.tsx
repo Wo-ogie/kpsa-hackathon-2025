@@ -1,31 +1,29 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { prescriptionAPI } from '../lib/api';
-import { Medication } from '../types/prescription';
 
 const NamingPrescription = () => {
   const navigate = useNavigate();
-  const [prescriptionName, setPrescriptionName] = useState('혈압 약');
+  const [prescriptionName, setPrescriptionName] = useState('처방약');
   const location = useLocation();
-  const medications: Medication[] = location.state?.medications || [];
+
 
   const handleClearInput = () => {
     setPrescriptionName('');
   };
 
-  const submitPrescription = () => {
-    prescriptionAPI.registerPrescription({
+  const submitPrescription = async () => {
+    const response = await prescriptionAPI.registerPrescription({
       name: prescriptionName.trim(),
       medication_start_date: '2025-07-26',
       medication_times: ['MORNING'],
-      drugs: medications.map(medication => ({
-        name: medication.name,
-        dose_per_time: medication.dose_per_time,
-        times_per_day: medication.times_per_day,
-        days: medication.days,
-      })),
+      drugs: location.state?.medications,
     });
-  };
+
+    if (response) {
+      navigate('/medication-history');
+    }
+  }
 
   return (
     <div className="bg-white min-h-screen">

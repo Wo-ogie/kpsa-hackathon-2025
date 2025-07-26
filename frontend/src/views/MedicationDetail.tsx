@@ -1,4 +1,3 @@
-import React from 'react';
 import BackButton from '../components/common/BackButton';
 
 const MedicationDetail = () => {
@@ -15,19 +14,11 @@ const MedicationDetail = () => {
 
   return (
     <div className="bg-white min-h-screen">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
-        <BackButton />
-        <h1 className="text-lg font-bold text-gray-900">나의 복약 정보</h1>
-        <div className="w-6"></div>
-      </div>
 
-      {/* 약 이름 */}
       <div className="p-4 border-b border-gray-100">
         <h2 className="text-xl font-bold text-gray-900">다이그린정</h2>
       </div>
 
-      {/* 경고 메시지 */}
       <div className="m-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">

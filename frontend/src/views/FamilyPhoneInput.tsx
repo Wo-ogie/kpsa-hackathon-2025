@@ -31,10 +31,8 @@ const FamilyPhoneInput = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col mobile-container safe-area-top safe-area-bottom px-6">
-      <BackButton />
+    <div className="min-h-[100dvh] flex flex-col mobile-container safe-area-top safe-area-bottom px-6">
 
-      {/* 메인 콘텐츠 - 화면 중앙 */}
       <div className="flex-1 flex flex-col justify-center">
         <div className="mb-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -78,8 +76,7 @@ const FamilyPhoneInput = () => {
         </div>
       </div>
 
-      {/* 하단 버튼 */}
-      <div className="pb-8">
+      <div className="fixed bottom-20 left-0 right-0 p-4">
         <Button
           onClick={handleNext}
           disabled={!isButtonActive}

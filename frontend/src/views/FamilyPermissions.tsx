@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Button from "../components/common/Button";
-import BackButton from "../components/common/BackButton";
 import CheckBox from "../components/common/CheckBox";
+import { familyAPI } from "../lib/api";
 
 const FamilyPermissions = () => {
   const [showMedicationRecords, setShowMedicationRecords] = useState(true);
@@ -11,7 +11,7 @@ const FamilyPermissions = () => {
   const location = useLocation();
   const { phone_number, nickname } = location.state || {};
 
-  const handleNext = () => {
+  const createFamily = () => {
     console.log("가족 권한 설정:", {
       phone_number,
       nickname,
@@ -21,13 +21,15 @@ const FamilyPermissions = () => {
 
     // TODO: 가족 추가 API 호출
     // 가족 추가 완료 후 메인 페이지로 이동
-    navigate("/main");
+    // navigate("/family");
+    familyAPI.addFamily(phone_number, nickname, showMedicationRecords, sendAlarmOnMiss)
+      .then((res) => {
+        navigate("/family");
+      });
   };
 
   return (
     <div className="min-h-screen flex flex-col mobile-container safe-area-top safe-area-bottom px-6">
-      <BackButton />
-
       <div className="flex-1 flex flex-col justify-center">
         <div className="mb-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -57,14 +59,14 @@ const FamilyPermissions = () => {
         </div>
       </div>
 
-      <div className="pb-8">
+      <div className="fixed bottom-20 left-0 right-0 p-4">
         <Button
-          onClick={handleNext}
+          onClick={createFamily}
           variant="primary"
           size="lg"
           fullWidth
         >
-          다음으로
+          완료
         </Button>
       </div>
     </div>

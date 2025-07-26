@@ -2,17 +2,18 @@ import React from 'react';
 import Point from '../common/Point';
 
 interface AlbumCardProps {
+  id: number;
   treeType: string;
-  name: string;
-  date: string;
+  point: number;
   image: string;
+  isLocked: boolean;
 }
 
 const AlbumCard: React.FC<AlbumCardProps> = ({
   treeType,
-  name,
-  date,
+  point,
   image,
+  isLocked
 }) => {
 
   return (
@@ -23,7 +24,7 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
       }}
     >
       <div className="absolute top-2 left-2 z-10 flex">
-        <Point point={304} size="sm" />
+        <Point point={point} size="sm" />
       </div>
       <img
         src={image}
@@ -31,12 +32,16 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
         className="absolute inset-0 w-full h-full object-contain"
       />
 
+      {isLocked && (
+        <div className="absolute inset-0 bg-white/50 flex items-center justify-center rounded-lg">
+          <img src="/images/lock.png" alt="lock" className="w-10 h-10" />
+        </div>
+      )}
+
 
       <div className="absolute bottom-0 left-0 right-0 px-3 rounded-b-lg">
-        <p className="text-xs text-orange-primary mb-1">{treeType}</p>
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-orange-primary mb-1">{name}</span>
-          <span className="text-xs text-orange-primary text-right">{date}</span>
+          <span className="text-lg font-bold text-orange-primary mb-1">{treeType}</span>
         </div>
       </div>
     </div>

@@ -6,7 +6,6 @@ interface AlbumCardProps {
   name: string;
   date: string;
   isLiked: boolean;
-  image: string;
   onLikeToggle?: (id: number) => void;
 }
 
@@ -16,7 +15,6 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
   name,
   date,
   isLiked,
-  image,
   onLikeToggle
 }) => {
   const handleLikeClick = () => {
@@ -33,13 +31,13 @@ const AlbumCard: React.FC<AlbumCardProps> = ({
       }}
     >
       <img
-        src={image}
+        src={treeType === "사과나무" ? "/assets/apple_tree.png" : "/assets/pear_tree.png"}
         alt={treeType}
         className="absolute inset-0 w-full h-full object-contain"
       />
 
       <button
-        className="absolute top-2 right-2 z-10"
+        className="absolute top-2 right-2 z-5"
         onClick={handleLikeClick}
       >
         <svg

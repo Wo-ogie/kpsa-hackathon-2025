@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { googleVisionService } from '../lib/GoogleVisionService';
 
 const AddMedicine = () => {
@@ -7,6 +7,7 @@ const AddMedicine = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { family_id } = useParams();
 
   const handleUploadClick = () => {
     setShowUploadModal(true);
@@ -99,7 +100,7 @@ const AddMedicine = () => {
 
       <div className="flex-1 p-6">
         <div className="text-center mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">처방전을 업로드해주세요</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2"> 처방전을 업로드해주세요</h2>
           <p className="text-gray-600 mb-6">약을 직접 입력하시나요?</p>
 
           <button

@@ -11,7 +11,7 @@ const MainLayout = () => {
   return (
     <BaseLayout
       header={<Header title={title} />}
-      mainClassName="min-h-[calc(100dvh-70px)] px-5"
+      mainClassName="min-h-[calc(100dvh-70px)] px-5 "
     >
       <BottomNavigation />
     </BaseLayout>

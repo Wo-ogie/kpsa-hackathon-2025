@@ -25,9 +25,9 @@ export const useAuth = () => {
   }, []);
 
   const signup = useCallback(async (userData: {
-    name: string;
-    phone: string;
-    protectorPhone?: string;
+    nickname: string;
+    phone_number: string;
+    is_guardian: boolean;
   }) => {
     setLoading(true);
     setError(null);

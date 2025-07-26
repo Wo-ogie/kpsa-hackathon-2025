@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { debounce } from 'lodash';
 import { drugAPI } from '../lib/api';
+import Button from '../components/common/Button';
+import { Medication } from '../types/prescription';
 
 
 
 const AddMedicineSearch = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearchResults, setShowSearchResults] = useState(true);
   const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [carts, setCarts] = useState<Medication[]>([]);
 
+  useEffect(() => {
+    const medications = localStorage.getItem('medications');
+    if (medications) {
+      setCarts(JSON.parse(medications));
+    }
+  }, []);
 
 
   const changeSearchQuery = debounce((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,12 +37,22 @@ const AddMedicineSearch = () => {
 
   const handleClearSearch = () => {
     setSearchQuery('');
-    setShowSearchResults(false);
+    setSearchResults([]);
   };
 
-  const handleMedicineSelect = (medicineId: number) => {
-    navigate(`/add-medicine-detail/${medicineId}`);
-  };
+
+  // const handleCart = (medicine: string) => {
+  // const medicineObj = { name: medicine, dose_per_time: , times_per_day: 1, days: 1 };
+  // const existingIndex = carts.findIndex(item => item.name === medicine);
+
+  // if (existingIndex !== -1) {
+  //   // 이미 카트에 있으면 제거
+  //   setCarts(carts.filter((_, index) => index !== existingIndex));
+  // } else {
+  //   // 카트에 없으면 추가 (중복 방지)
+  //   setCarts(prev => [...prev, medicineObj]);
+  // }
+  // };
 
   return (
     <div className="bg-white min-h-screen">
@@ -71,17 +89,15 @@ const AddMedicineSearch = () => {
           </div>
         </div>
 
-        {/* 검색 결과 */}
-        {searchResults.length && searchQuery && (
-          <div>
-            <p className="text-sm text-gray-600 mb-4">총 검색 결과 {searchResults.length}건</p>
-
+        {searchResults.length > 0 && searchQuery && (
+          <div >
+            <p className="text-center text-lg font-bold text-gray-600 mb-4">총 검색 결과 <span className='text-orange-primary'>{searchResults.length}건</span></p>
             <div className="space-y-4">
               {searchResults.map((medicine, index) => (
                 <div
                   key={index}
-                  onClick={() => handleMedicineSelect(index)}
-                  className="p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => navigate('/set-medicine-detail', { state: { medicineName: medicine } })}
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors border-gray-200 hover:bg-gray-50`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -90,17 +106,24 @@ const AddMedicineSearch = () => {
                         <h3 className="font-semibold text-gray-900">{medicine}</h3>
                       </div>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
                   </div>
-
-
                 </div>
               ))}
             </div>
           </div>
         )}
+
+
+      </div>
+      <div className='fixed bottom-20 left-0 right-0 p-4'>
+        <Button
+          onClick={() => navigate('/drug-cart')}
+          variant="primary"
+          size="lg"
+          fullWidth
+        >
+          담은 약 {carts.length}개 보러가기
+        </Button>
       </div>
     </div>
   );

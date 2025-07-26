@@ -1,7 +1,8 @@
 import asyncio
 import json
+from typing import Annotated
 
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Response, Depends, Path
 from openai import OpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,11 +31,11 @@ PARSE_PRESCRIPTION_TEMPLATE: str = """OCR로 추출한 처방전 텍스트 데�
     Text:
     """
 
-router = APIRouter(prefix="/api/prescriptions", tags=["prescription"])
+router = APIRouter(prefix="/api", tags=["prescription"])
 
 
 @router.post(
-    path="/parse",
+    path="/prescriptions/parse",
     summary="처방전 텍스트 분석",
     description="처방전에서 OCR로 추출된 텍스트를 분석하여 약 정보를 추출합니다."
 )
@@ -55,17 +56,47 @@ async def parse_prescriptions(
 
 
 @router.post(
-    path="",
+    path="/users/me/prescriptions",
     summary="처방전 등록",
     description="처방전 정보를 등록합니다."
 )
-async def create_prescription(
+async def create_prescription_for_other(
     request: CreatePrescriptionRequest,
     current_user_id: int = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> PrescriptionResponse:
-    prescription: Prescription = Prescription(
+    return await _create_prescription(
         user_id=current_user_id,
+        request=request,
+        session=session
+    )
+
+
+@router.post(
+    path="/users/{user_id}/prescriptions",
+    summary="처방전 등록",
+    description="처방전 정보를 등록합니다."
+)
+async def create_prescription_for_other(
+    user_id: Annotated[int, Path(..., description="처방전을 추가할 User ID")],
+    request: CreatePrescriptionRequest,
+    _: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> PrescriptionResponse:
+    return await _create_prescription(
+        user_id=user_id,
+        request=request,
+        session=session
+    )
+
+
+async def _create_prescription(
+    user_id: int,
+    request: CreatePrescriptionRequest,
+    session: AsyncSession
+) -> PrescriptionResponse:
+    prescription: Prescription = Prescription(
+        user_id=user_id,
         name=request.name,
         medication_start_date=request.medication_start_date,
     )

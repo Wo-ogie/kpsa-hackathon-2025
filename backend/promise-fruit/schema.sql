@@ -1,3 +1,6 @@
+DROP TABLE IF EXISTS `purchased_plant`;
+DROP TABLE IF EXISTS `user_plant`;
+DROP TABLE IF EXISTS `plant`;
 DROP TABLE IF EXISTS `prescription_drug`;
 DROP TABLE IF EXISTS `prescription`;
 DROP TABLE IF EXISTS `user`;
@@ -40,4 +43,45 @@ CREATE TABLE `prescription_drug`
     `updated_at`      TIMESTAMP   NOT NULL,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`prescription_id`) REFERENCES `prescription` (`id`)
+);
+
+CREATE TABLE `plant`
+(
+    `id`              BIGINT      NOT NULL AUTO_INCREMENT,
+    `name`            VARCHAR(50) NOT NULL,
+    `max_fruit_count` INT         NOT NULL,
+    `point_per_fruit` INT         NOT NULL,
+    `unlock_price`    INT         NOT NULL,
+    `plant_price`     INT         NOT NULL,
+    `created_at`      TIMESTAMP   NOT NULL,
+    `updated_at`      TIMESTAMP   NOT NULL,
+    PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `purchased_plant`
+(
+    `id`         BIGINT    NOT NULL AUTO_INCREMENT,
+    `user_id`    BIGINT    NOT NULL,
+    `plant_id`   BIGINT    NOT NULL,
+    `created_at` TIMESTAMP NOT NULL,
+    `updated_at` TIMESTAMP NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
+    FOREIGN KEY (`plant_id`) REFERENCES `plant` (`id`)
+);
+
+CREATE TABLE `user_plant`
+(
+    `id`           BIGINT      NOT NULL AUTO_INCREMENT,
+    `user_id`      BIGINT      NOT NULL,
+    `plant_id`     BIGINT      NOT NULL,
+    `nickname`     VARCHAR(50) NOT NULL,
+    `growth`       SMALLINT    NOT NULL,
+    `fruit_count`  SMALLINT    NOT NULL DEFAULT 0,
+    `is_completed` BOOLEAN     NOT NULL DEFAULT FALSE,
+    `created_at`   TIMESTAMP   NOT NULL,
+    `updated_at`   TIMESTAMP   NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
+    FOREIGN KEY (`plant_id`) REFERENCES `plant` (`id`)
 )

@@ -34,13 +34,12 @@ def get_current_user_id(
     summary="카카오 로그인",
     description="카카오 로그인합니다. 요청 시, 발급받은 인가코드와 설정한 redirect url이 필요합니다."
                 "로그인 성공 시, 로그인한 유저 정보를 응답합니다."
+                "로그인 후 받은 유저 ID는 이후 인증/인가가 필요한 API 호출 시 `X-User-Id` header에 담아 요청해야 합니다."
 )
 async def kakao_login(
     request: KakaoLoginRequest,
-    http_response: Response,
     session: AsyncSession = Depends(get_session),
     client: AsyncClient = Depends(get_async_client),
-    session_manager: SessionManager = Depends(get_session_manager),
 ) -> UserResponse:
     # Access token 발행
     response = await client.post(
@@ -83,18 +82,14 @@ async def kakao_login(
         await session.commit()
         await session.refresh(user)
 
-    await _create_session_and_set_cookie(http_response, session_manager, user)
-
     return UserResponse.model_validate(user)
 
 
 @router.post(path="/login/kakao/token")
 async def kakao_token_login(
     request: KakaoLoginTokenRequest,
-    http_response: Response,
     session: AsyncSession = Depends(get_session),
     client: AsyncClient = Depends(get_async_client),
-    session_manager: SessionManager = Depends(get_session_manager),
 ) -> UserResponse:
     # 카카오 유저 정보 조회
     response: Response = await client.get(
@@ -124,8 +119,6 @@ async def kakao_token_login(
         await session.commit()
         await session.refresh(user)
 
-    await _create_session_and_set_cookie(http_response, session_manager, user)
-
     return UserResponse.model_validate(user)
 
 
@@ -152,7 +145,7 @@ async def signup(
     return UserResponse.model_validate(user)
 
 
-async def _create_session_and_set_cookie(response: Response, session_manager: SessionManager, user: User) -> None:
+async def _create_session_and_set_cookie(response: Response, session_manager: SessionManager, user: User) -> str:
     session_id: str = str(uuid.uuid4())
     session_manager.create_session(session_id, user.id)
     response.set_cookie(
@@ -164,3 +157,4 @@ async def _create_session_and_set_cookie(response: Response, session_manager: Se
         secure=False,
         path="/"
     )
+    return session_id

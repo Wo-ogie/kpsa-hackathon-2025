@@ -24,4 +24,4 @@ async def find_drugs(
         params=params,
     )
     response_data = response.json()
-    return response_data["body"]["items"]
+    return response_data["body"].get("items", [])

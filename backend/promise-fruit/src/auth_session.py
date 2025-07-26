@@ -1,8 +1,9 @@
-from fastapi import HTTPException, Security, Depends
-from fastapi.security import APIKeyCookie
+from fastapi import HTTPException, Security
+from fastapi.security import APIKeyHeader
+from starlette.status import HTTP_401_UNAUTHORIZED
 
 SESSION_COOKIE_NAME = "session_id"
-API_KEY_COOKIE = APIKeyCookie(name=SESSION_COOKIE_NAME)
+api_key_header = APIKeyHeader(name="X-User-Id", auto_error=False)
 
 
 class SessionManager:
@@ -29,12 +30,17 @@ def get_session_manager():
 
 
 def get_current_user(
-    session_id: str = Security(API_KEY_COOKIE),
-    session_manager: SessionManager = Depends(get_session_manager)
+    user_id: int = Security(api_key_header),
 ) -> int:
-    if not session_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    user_id: int | None = session_manager.find_session(session_id)
     if not user_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return user_id
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+    try:
+        return int(user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Invalid user id",
+        )

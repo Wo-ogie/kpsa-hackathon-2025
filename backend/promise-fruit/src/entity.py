@@ -35,6 +35,8 @@ class User(BaseEntity):
     kakao_uid: Mapped[str] = mapped_column("kakao_uid", String(255), nullable=False)
     fcm_token: Mapped[str] = mapped_column("fcm_token", String(255), nullable=False)
 
+    purchased_plants: Mapped[list["PurchasedPlant"]] = relationship("PurchasedPlant", lazy="select")
+
 
 class Prescription(BaseEntity):
     __tablename__ = "prescription"
@@ -63,3 +65,40 @@ class PrescriptionDrug(BaseEntity):
     count: Mapped[int] = mapped_column("count", Integer, nullable=False)
 
     prescription: Mapped["Prescription"] = relationship("Prescription", lazy="select", back_populates="drugs")
+
+
+class Plant(BaseEntity):
+    __tablename__ = "plant"
+
+    id: Mapped[int] = mapped_column("id", BigInteger, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column("name", String(50), nullable=False)
+    max_fruit_count: Mapped[int] = mapped_column("max_fruit_count", Integer, nullable=False)
+    point_per_fruit: Mapped[int] = mapped_column("point_per_fruit", Integer, nullable=False)
+    unlock_price: Mapped[int] = mapped_column("unlock_price", Integer, nullable=False)
+    plant_price: Mapped[int] = mapped_column("plant_price", Integer, nullable=False)
+
+
+class UserPlant(BaseEntity):
+    __tablename__ = "user_plant"
+
+    id: Mapped[int] = mapped_column("id", BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column("user_id", BigInteger, ForeignKey("user.id"), nullable=False)
+    plant_id: Mapped[int] = mapped_column("plant_id", BigInteger, ForeignKey("plant.id"), nullable=False)
+    nickname: Mapped[str] = mapped_column("nickname", String(50), nullable=False)
+    growth: Mapped[int] = mapped_column("growth", Integer, nullable=False)
+    fruit_count: Mapped[int] = mapped_column("fruit_count", Integer, nullable=False, default=0)
+    is_completed: Mapped[bool] = mapped_column("is_completed", Boolean, nullable=False, default=False)
+
+    user: Mapped["User"] = relationship("User", lazy="select")
+    plant: Mapped["Plant"] = relationship("Plant", lazy="select")
+
+
+class PurchasedPlant(BaseEntity):
+    __tablename__ = "purchased_plant"
+
+    id: Mapped[int] = mapped_column("id", BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column("user_id", BigInteger, ForeignKey("user.id"), nullable=False)
+    plant_id: Mapped[int] = mapped_column("plant_id", BigInteger, ForeignKey("plant.id"), nullable=False)
+
+    user: Mapped["User"] = relationship("User", lazy="select")
+    plant: Mapped["Plant"] = relationship("Plant", lazy="select")

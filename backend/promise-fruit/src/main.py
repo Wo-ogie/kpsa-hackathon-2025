@@ -10,6 +10,7 @@ from starlette.staticfiles import StaticFiles
 from src.client.async_client import init_async_client, close_async_client
 from src.router.auth_router import router as auth_router
 from src.router.drug_router import router as drug_router
+from src.router.plant_router import router as plant_router
 from src.router.prescription_router import router as prescription_router
 from src.router.user_router import router as user_router
 
@@ -39,13 +40,14 @@ app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(prescription_router)
 app.include_router(drug_router)
+app.include_router(plant_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 모든 오리진 허용
+    allow_origins=["http://localhost:5173", "http://localhost:8000", "http://1.201.18.170:8000"],
     allow_credentials=True,
-    allow_methods=["*"],  # 모든 HTTP 메서드 허용
-    allow_headers=["*"],  # 모든 HTTP 헤더 허용
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

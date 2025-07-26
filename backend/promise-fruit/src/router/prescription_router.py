@@ -2,7 +2,7 @@ import asyncio
 import json
 from typing import Annotated
 
-from fastapi import APIRouter, Response, Depends, Path
+from fastapi import APIRouter, Response, Depends, Path, HTTPException
 from openai import OpenAI
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,6 +34,28 @@ PARSE_PRESCRIPTION_TEMPLATE: str = """OCR로 추출한 처방전 텍스트 데�
     """
 
 router = APIRouter(prefix="/api", tags=["prescription"])
+
+
+@router.get(
+    path="/prescriptions/{prescription_id}",
+    summary="처방전 상세 조회",
+    description="처방전 정보를 상세 조회합니다.",
+    responses={
+        404: {"description": "`prescription_id`에 해당하는 처방전이 없는 경우"}
+    }
+)
+async def find_my_prescriptions(
+    prescription_id: Annotated[int, Path(..., description="처방전 ID")],
+    _: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> PrescriptionResponse:
+    result = await session.execute(
+        select(Prescription).where(Prescription.id == prescription_id)
+    )
+    prescription: Prescription = result.scalar()
+    if prescription is None:
+        raise HTTPException(status_code=404, detail="Prescription not found.")
+    return PrescriptionResponse.model_validate(prescription)
 
 
 @router.get(

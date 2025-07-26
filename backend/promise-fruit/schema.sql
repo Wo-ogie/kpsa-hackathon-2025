@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS `family`;
 DROP TABLE IF EXISTS `medication_history`;
 DROP TABLE IF EXISTS `purchased_plant`;
 DROP TABLE IF EXISTS `user_plant`;
@@ -99,4 +100,23 @@ CREATE TABLE `medication_history`
     PRIMARY KEY (`id`),
     FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
     FOREIGN KEY (`prescription_id`) REFERENCES `prescription` (`id`)
+);
+
+CREATE TABLE `family`
+(
+    `id`                              BIGINT      NOT NULL AUTO_INCREMENT,
+    `requester_id`                    BIGINT      NOT NULL,
+    `requester_nickname`              VARCHAR(50) NOT NULL,
+    `recipient_id`                    BIGINT      NOT NULL,
+    `recipient_nickname`              VARCHAR(50) NOT NULL,
+    `requester_allow_view_medication` BOOLEAN     NOT NULL,
+    `requester_allow_alarm`           BOOLEAN     NOT NULL,
+    `recipient_allow_view_medication` BOOLEAN     NOT NULL,
+    `recipient_allow_alarm`           BOOLEAN     NOT NULL,
+    `created_at`                      TIMESTAMP   NOT NULL,
+    `updated_at`                      TIMESTAMP   NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uniq_family_pair` (`requester_id`, `recipient_id`),
+    FOREIGN KEY (`requester_id`) REFERENCES `user` (`id`),
+    FOREIGN KEY (`recipient_id`) REFERENCES `user` (`id`)
 );

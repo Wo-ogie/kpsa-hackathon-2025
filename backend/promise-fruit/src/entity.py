@@ -37,6 +37,20 @@ class User(BaseEntity):
 
     purchased_plants: Mapped[list["PurchasedPlant"]] = relationship("PurchasedPlant", lazy="joined")
 
+    # Family 관련 연관관계 추가
+    requested_families: Mapped[list["Family"]] = relationship(
+        "Family",
+        foreign_keys="Family.requester_id",
+        back_populates="requester",
+        lazy="select"
+    )
+    received_families: Mapped[list["Family"]] = relationship(
+        "Family",
+        foreign_keys="Family.recipient_id",
+        back_populates="recipient",
+        lazy="select"
+    )
+
 
 class Prescription(BaseEntity):
     __tablename__ = "prescription"
@@ -116,3 +130,34 @@ class MedicationHistory(BaseEntity):
     medication_time: Mapped[MedicationTime] = mapped_column("medication_time", String(50), nullable=False)
 
     prescription: Mapped["Prescription"] = relationship("Prescription", lazy="joined")
+
+
+class Family(BaseEntity):
+    __tablename__ = "family"
+
+    id: Mapped[int] = mapped_column("id", BigInteger, primary_key=True, autoincrement=True)
+    requester_id: Mapped[int] = mapped_column("requester_id", BigInteger, ForeignKey("user.id"), nullable=False)
+    requester_nickname: Mapped[str] = mapped_column("requester_nickname", String(50), nullable=False)
+    recipient_id: Mapped[int] = mapped_column("recipient_id", BigInteger, ForeignKey("user.id"), nullable=False)
+    recipient_nickname: Mapped[str] = mapped_column("recipient_nickname", String(50), nullable=False)
+    requester_allow_view_medication: Mapped[bool] = mapped_column(
+        "requester_allow_view_medication", Boolean, nullable=False
+    )
+    requester_allow_alarm: Mapped[bool] = mapped_column("requester_allow_alarm", Boolean, nullable=False)
+    recipient_allow_view_medication: Mapped[bool] = mapped_column(
+        "recipient_allow_view_medication", Boolean, nullable=False
+    )
+    recipient_allow_alarm: Mapped[bool] = mapped_column("recipient_allow_alarm", Boolean, nullable=False)
+
+    requester: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[requester_id],
+        back_populates="requested_families",
+        lazy="joined"
+    )
+    recipient: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[recipient_id],
+        back_populates="received_families",
+        lazy="joined"
+    )

@@ -3,7 +3,7 @@ from datetime import datetime, date
 from pydantic import BaseModel, Field, ConfigDict, field_serializer
 
 from src.constant import MedicationTime
-from src.entity import PrescriptionDrug, Plant
+from src.entity import PrescriptionDrug, Plant, Family
 
 """
 Auth
@@ -194,6 +194,10 @@ class HarvestFruitResponse(BaseModel):
     active_plant: UserPlantResponse = Field(..., description="수확 후 키우고 있는 식물 정보")
 
 
+class PlantAlbumResponse(BaseModel):
+    plants: list[UserPlantResponse] = Field(..., description="유저가 키운 식물 목록")
+
+
 """
 Medication
 """
@@ -211,3 +215,52 @@ class MedicationHistoryResponse(BaseModel):
 
 class MedicationHistoriesResponse(BaseModel):
     histories: list[MedicationHistoryResponse] = Field(..., description="복용 기록 목록")
+
+
+"""
+Family
+"""
+
+
+class AddUserToFamilyRequest(BaseModel):
+    target_phone_number: str = Field(..., description="가족으로 추가할 유저의 전화번호")
+    target_nickname: str = Field(..., description="추가 대상에 대한 별명")
+    allow_view_medication: bool = Field(..., description="자신의 복용 기록 열람 허용 여부")
+    allow_alarm: bool = Field(..., description="자신의 약물 미복용 시, 알림 전달 여부")
+
+
+class AddUserToFamilyResponse(BaseModel):
+    requester_id: int = Field(..., description="가족 추가 요청을 보낸 유저의 ID")
+    recipient_id: int = Field(..., description="가족 추가 요청을 받은 유저의 ID")
+
+
+class FamilyMemberResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="User id")
+    nickname: str = Field(..., description="가족 별명")
+    is_guardian: bool = Field(..., description="대상 유저가 보호자인지 여부")
+    allow_view_medication: bool = Field(..., description="(상대방이 나에게) 복용 기록 열람 허용 여부")
+    allow_alarm: bool = Field(..., description="(상대방이 나에게) 약물 미복용 시 알림 전달 허용 여부")
+    created_at: datetime = Field(..., description="생성 시각")
+    updated_at: datetime = Field(..., description="수정 시각")
+
+    @classmethod
+    def model_validate_family(cls, family: Family, is_requester: bool) -> "FamilyMemberResponse":
+        user = family.recipient if is_requester else family.requester
+        nickname = family.recipient_nickname if is_requester else family.requester_nickname
+        allow_view = family.recipient_allow_view_medication if is_requester else family.requester_allow_view_medication
+        allow_alarm = family.recipient_allow_alarm if is_requester else family.requester_allow_alarm
+        return cls.model_validate({
+            "id": user.id,
+            "nickname": nickname,
+            "is_guardian": user.is_guardian,
+            "allow_view_medication": allow_view,
+            "allow_alarm": allow_alarm,
+            "created_at": family.created_at,
+            "updated_at": family.updated_at
+        })
+
+
+class FamilyMembersResponse(BaseModel):
+    family_members: list[FamilyMemberResponse] = Field(..., description="가족으로 등록된 유저 목록")

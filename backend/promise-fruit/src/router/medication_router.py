@@ -106,8 +106,14 @@ async def verify_medication(
     session.add_all(medication_histories)
 
     # 식물 성장도 증가
-    user_plant.growth += plant.growth_increment
     if user_plant.growth >= 100:
+        raise HTTPException(status_code=409, detail="Plant is no more growing.")
+
+    user_plant.growth += plant.growth_increment
+    if user_plant.growth > 100:
+        user_plant.growth = 100
+
+    if user_plant.growth == 100:
         user_plant.fruit_count = plant.max_fruit_count
 
     await session.commit()

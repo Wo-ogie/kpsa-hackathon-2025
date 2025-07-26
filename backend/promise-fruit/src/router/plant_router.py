@@ -8,15 +8,56 @@ from src.entity import User
 from src.entity import UserPlant, Plant
 from src.schema import (
     ActivePlantResponse, PlantPlantRequest, HarvestFruitResponse, UpdateActivePlantNicknameRequest,
-    FindActivePlantResponse
+    FindActivePlantResponse, PlantAlbumResponse
 )
 from src.schema import UserPlantResponse
 
-router = APIRouter(prefix="/api/plants", tags=["plant"])
+router = APIRouter(prefix="/api", tags=["plant"])
 
 
 @router.get(
-    path="/active",
+    path="/users/me/plant-albums",
+    summary="내 식물 앨범 조회",
+    description="내 식물 앨범을 조회합니다. 그동안 내가 키운 식물들이 조회됩니다. 식물이 전부 수확된 날짜는 `updated_at`을 사용하시면 됩니다."
+)
+async def find_my_plant_albums(
+    current_user_id: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> PlantAlbumResponse:
+    result = await session.execute(
+        select(UserPlant)
+        .where(UserPlant.user_id == current_user_id, UserPlant.is_completed == True)
+    )
+    plants: list[UserPlant] = result.unique().scalars().all()
+    return PlantAlbumResponse(plants=[
+        UserPlantResponse.model_validate(plant)
+        for plant in plants
+    ])
+
+
+@router.get(
+    path="/users/{user_id}/plant-albums",
+    summary="식물 앨범 조회",
+    description="식물 앨범을 조회합니다. 그동안 유저가 키운 식물들이 조회됩니다."
+)
+async def find_plant_albums(
+    user_id: int,
+    _: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> PlantAlbumResponse:
+    result = await session.execute(
+        select(UserPlant)
+        .where(UserPlant.user_id == user_id, UserPlant.is_completed == True)
+    )
+    plants: list[UserPlant] = result.unique().scalars().all()
+    return PlantAlbumResponse(plants=[
+        UserPlantResponse.model_validate(plant)
+        for plant in plants
+    ])
+
+
+@router.get(
+    path="/plants/active",
     summary="현재 키우고 있는 식물 조회",
     description="현재 키우고 있는 식물 정보를 조회합니다."
 )
@@ -35,7 +76,7 @@ async def find_active_plant(
 
 
 @router.post(
-    path="/plant",
+    path="/plants/plant",
     summary="식물 심기",
     description="식물을 심습니다. "
                 "심은 식물은 현재 내가 키우는 식물로 간주되어, '현재 키우고 있는 식물 조회 API'에서 조회됩니다. "
@@ -75,7 +116,7 @@ async def plant_plant(
 
 
 @router.post(
-    path="/active/harvest",
+    path="/plants/active/harvest",
     summary="키우고 있는 식물 열매 수확",
     description="현재 키우고 있는 식물에서 열린 열매를 수확하여 포인트를 획득합니다. "
                 "열매는 한 번(호출)에 하나씩 수확합니다. "
@@ -122,7 +163,7 @@ async def harvest_active_plant_fruit(
 
 
 @router.put(
-    path="/active/nicknames",
+    path="/plants/active/nicknames",
     summary="키우고 있는 식물의 별명 수정",
     description="현재 키우고 있는 식물의 별명을 변경합니다."
 )

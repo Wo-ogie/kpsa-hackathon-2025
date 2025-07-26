@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from envs import get_envs, Envs
+from src.envs import get_envs, Envs
 
 envs: Envs = get_envs()
 

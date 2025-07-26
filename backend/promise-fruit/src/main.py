@@ -1,13 +1,13 @@
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 
-from auth_session import get_current_user
-from client.base import init_async_client, close_async_client
-from router.auth_router import router as auth_router
-from router.user_router import router as user_router
+from src.client.base import init_async_client, close_async_client
+from src.router.auth_router import router as auth_router
+from src.router.user_router import router as user_router
 
 
 @asynccontextmanager
@@ -27,6 +27,14 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 app.include_router(auth_router)
 app.include_router(user_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 모든 오리진 허용
+    allow_credentials=True,
+    allow_methods=["*"],  # 모든 HTTP 메서드 허용
+    allow_headers=["*"],  # 모든 HTTP 헤더 허용
+)
 
 
 @app.get("/")

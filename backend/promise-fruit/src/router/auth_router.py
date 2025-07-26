@@ -5,12 +5,12 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth_session import SessionManager, get_session_manager, SESSION_COOKIE_NAME, get_current_user
-from client.base import get_async_client
-from entity import User
-from envs import get_envs, Envs
-from schema import KakaoLoginRequest, UserResponse, KakaoLoginTokenRequest, SignUpRequest
+from src.auth_session import SessionManager, get_session_manager, SESSION_COOKIE_NAME, get_current_user
+from src.client.base import get_async_client
 from src.database import get_session
+from src.entity import User
+from src.envs import get_envs, Envs
+from src.schema import KakaoLoginRequest, UserResponse, KakaoLoginTokenRequest, SignUpRequest
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 

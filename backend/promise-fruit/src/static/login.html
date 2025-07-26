@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Kakao Redirect - 인가 코드 표시</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', Arial, sans-serif;
+            background: #F7E600;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 32px 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        h2 {
+            color: #391B1B;
+            margin-bottom: 16px;
+        }
+
+        .code {
+            background: #EEE;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            margin-top: 18px;
+            word-break: break-all;
+        }
+
+        .desc {
+            font-size: 0.95em;
+            color: #555;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Kakao 인가 코드</h2>
+    <div id="code-area" class="code">인가 코드 없음</div>
+    <div class="desc">카카오 로그인 완료 후 이 페이지에 인가 코드가 표시됩니다.</div>
+</div>
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if (code) {
+        document.getElementById('code-area').innerText = code;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Kakao Login Code Test</title>
+</head>
+<body>
+<h2>Kakao 인가 코드 테스트</h2>
+<button id="kakao-login-btn">카카오 로그인</button>
+<div id="code-area"></div>
+
+<script>
+    const KAKAO_REST_API_KEY = "a4257383e069ae3d075560ff74fcda0d";
+    const REDIRECT_URI = "http://localhost:8000/static/login.html";
+
+    document.getElementById('kakao-login-btn').onclick = function () {
+        window.location.href = `https://kauth.kakao.com/oauth/authorize?` +
+            `client_id=${KAKAO_REST_API_KEY}` +
+            `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+            `&response_type=code`;
+    };
+
+    window.onload = function () {
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        if (code) {
+            document.getElementById('code-area').innerHTML =
+                `<p><strong>인가 코드:</strong> ${code}</p>`;
+        }
+    };
+</script>
+</body>
+</html>

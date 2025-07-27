@@ -2,7 +2,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 const CLIENT_URL = import.meta.env.VITE_CLIENT_URL;
 import { Plant, HarvestFruitResponse, ActivePlant } from '../types/plant'
 import { Prescription, PrescriptionResponse } from '../types/prescription'
-import { FamilyMember } from '../types'
+import { FamilyMember, MedicationHistory, Notification } from '../types'
 
 // 쿠키 및 헤더 저장 함수
 const saveHeadersFromResponse = (response: Response) => {
@@ -24,6 +24,13 @@ const saveHeadersFromResponse = (response: Response) => {
 
 // API 클라이언트 설정
 const apiClient = {
+  familyRequestManager: null as any,
+
+  // FamilyRequestManager 설정
+  setFamilyRequestManager(manager: any) {
+    this.familyRequestManager = manager;
+  },
+
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
 
@@ -49,10 +56,27 @@ const apiClient = {
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+
+      // 가족 등록 요청 감지 및 모달 표시
+      this.handleFamilyRequest(data, endpoint);
+
+      return data;
     } catch (error) {
       console.error('API request failed:', error);
       throw error;
+    }
+  },
+
+  // 가족 등록 요청 처리
+  handleFamilyRequest(data: any, endpoint: string) {
+    // 가족 등록 요청 관련 엔드포인트 감지
+    if (endpoint.includes('/families/requests') && data.success) {
+      // 요청 데이터에서 전화번호 추출
+      const requestData = JSON.parse(localStorage.getItem('lastFamilyRequest') || '{}');
+      if (requestData.requester_phone_number && this.familyRequestManager) {
+        this.familyRequestManager.showFamilyRequestModal(requestData.requester_phone_number);
+      }
     }
   },
 
@@ -124,13 +148,19 @@ export const prescriptionAPI = {
     name: string;
     medication_start_date: string;
     medication_times: string[];
-  }, userId?: boolean) => {
+  }, userId?: number) => {
     if (!userId) {
       return apiClient.post<PrescriptionResponse>('/users/me/prescriptions', prescriptionData)
     } else {
       return apiClient.post<PrescriptionResponse>(`/users/${userId}/prescriptions`, prescriptionData)
     }
   },
+
+  getMyMedicationHistories: () =>
+    apiClient.get<{ medication_histories: MedicationHistory[] }>(`/users/me/medication-histories`),
+
+  getMedicationHistory: (user_id: number) =>
+    apiClient.get<{ medication_histories: MedicationHistory[] }>(`/users/${user_id}/medication-histories`),
 };
 
 // Drug API
@@ -138,14 +168,17 @@ export const drugAPI = {
   // 약 이름 검색
   searchDrugNames: (query: string): Promise<{ drug_names: string[] }> =>
     apiClient.get<{ drug_names: string[] }>(`/drugs/names/search?name=${query}`),
+  getMyPrescriptions: () =>
+    apiClient.get<{ prescriptions: Prescription[] }>(`/users/me/prescriptions`),
   getPrescriptions: (user_id: number) =>
     apiClient.get<{ prescriptions: Prescription[] }>(`/users/${user_id}/prescriptions`),
+
 };
 
 // Plant API
 export const plantAPI = {
   // 현재 키우고 있는 식물 조회
-  getActivePlants: () => apiClient.get<{ active_plant: boolean | Plant }>('/plants/active'),
+  getActivePlants: () => apiClient.get<{ active_plant: boolean | ActivePlant }>('/plants/active'),
 
   // 식물 심기
   plantTree: (plant_id: number) => apiClient.post<Plant>('/plants/plant', { plant_id }),
@@ -159,10 +192,10 @@ export const plantAPI = {
     apiClient.put(`/plants/active/nicknames`, { plantId, nickname }),
 
   verifyMedication: (medication_time: string, prescription_ids: number[]) =>
-    apiClient.post<{ active_plant: Plant }>(`/medications/verify`, { medication_time, prescription_ids }),
+    apiClient.post<{ active_plant: ActivePlant }>(`/medications/verify`, { medication_time, prescription_ids }),
 
   changeNickname: (nickname: string) =>
-    apiClient.put<{ active_plant: Plant }>(`/plants/active/nicknames`, { nickname }),
+    apiClient.put<{ active_plant: ActivePlant }>(`/plants/active/nicknames`, { nickname }),
 };
 
 
@@ -171,11 +204,37 @@ export const familyAPI = {
   addFamily: (target_phone_number: string, target_nickname: string, allow_view_medication: boolean, allow_alarm: boolean) =>
     apiClient.post<{ family_members: FamilyMember[] }>(`/families`, { target_phone_number, target_nickname, allow_view_medication, allow_alarm }),
 
+  // 가족 등록 요청을 받는 API
+  receiveFamilyRequest: (requester_phone_number: string, requester_nickname: string) => {
+    // 요청 데이터를 localStorage에 저장
+    localStorage.setItem('lastFamilyRequest', JSON.stringify({ requester_phone_number, requester_nickname }));
+    return apiClient.post<{ success: boolean }>(`/families/requests`, { requester_phone_number, requester_nickname });
+  },
+
+  // 가족 등록 요청 응답 API
+  respondToFamilyRequest: (request_id: number, accept: boolean) =>
+    apiClient.put<{ success: boolean }>(`/families/requests/${request_id}`, { accept }),
+
   getFamilyAlbum: (family_id: number) =>
     apiClient.get<{ plants: Plant[] }>(`/users/${family_id}/plant-albums`),
 
   getMyAlbum: () =>
     apiClient.get<{ plants: ActivePlant[] }>(`/users/me/plant-albums`),
+};
+
+export const notificationAPI = {
+  getNotifications: () =>
+    apiClient.get<{ notifications: Notification[] }>(`/notifications`),
+};
+
+// 가족 등록 요청 시뮬레이션 함수 (테스트용)
+export const simulateFamilyRequest = async (phoneNumber: string) => {
+  // 실제로는 서버에서 푸시 알림이나 웹소켓을 통해 호출됨
+  const { default: FamilyRequestManager } = await import('./familyRequestManager');
+  setTimeout(() => {
+    const manager = FamilyRequestManager.getInstance();
+    manager.showFamilyRequestModal(phoneNumber);
+  }, 1000);
 };
 
 export default apiClient; 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Button from "../components/common/Button";
-import BackButton from "../components/common/BackButton";
+import { familyAPI } from "../lib/api";
 
 const FamilyNickname = () => {
   const [nickname, setNickname] = useState("");
@@ -10,6 +10,14 @@ const FamilyNickname = () => {
   const phoneNumber = location.state?.phone_number || "";
 
   const handleNext = () => {
+    const isGuardian = localStorage.getItem('is_guardian') === 'true'
+    if (!isGuardian) {
+      familyAPI.addFamily(phoneNumber, nickname, true, true)
+        .then(() => {
+          navigate("/family");
+        });
+      return
+    }
     if (nickname.trim()) {
       console.log("가족 닉네임:", nickname);
       // 권한 설정 페이지로 이동

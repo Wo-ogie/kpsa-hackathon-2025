@@ -9,13 +9,8 @@ interface GameContainerProps {
   onAppleHarvest?: () => void;
 }
 
-const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange, onAppleHarvest }) => {
-  const [waterDrops, setWaterDrops] = useState<Array<{ id: number; x: number; y: number }>>([]);
-  const [waterCount, setWaterCount] = useState(0);
-  const [showGrowthAnimation, setShowGrowthAnimation] = useState(false);
-  const [treeSize, setTreeSize] = useState(0)
+const GameContainer: React.FC<GameContainerProps> = ({ onAppleHarvest }) => {
   const [apples, setApples] = useState<Array<{ id: number; x: number; y: number; isDropping: boolean }>>([]);
-  const [appleCount, setAppleCount] = useState(0);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastPoints, setToastPoints] = useState(0);
@@ -25,7 +20,6 @@ const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange, o
   const appleIdCounter = useRef(0)
   const [activePlant, setActivePlant] = useState<ActivePlant | null>(null);
 
-  const MAX_APPLES = 3;
 
   // activePlant의 id와 growth에 따라 이미지 경로를 결정하는 함수
   const getTreeImagePath = () => {
@@ -87,10 +81,8 @@ const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange, o
         }
       ];
       setApples(initialApples);
-      setAppleCount(activePlant?.fruit_count || 0);
     } else if (!shouldShowApples) {
       setApples([]);
-      setAppleCount(0);
     }
   }, [activePlant]);
 
@@ -119,7 +111,6 @@ const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange, o
     // 사과 제거 (애니메이션 완료 후)
     setTimeout(() => {
       setApples(prev => prev.filter(apple => apple.id !== appleId));
-      setAppleCount(prev => prev - 1);
     }, 1000);
 
     // API 호출 (주석 해제하여 사용)
@@ -139,16 +130,16 @@ const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange, o
         setTimeout(() => {
           localStorage.removeItem('activePlant');
           plantAPI.getActivePlants()
-            .then((res: { active_plant: boolean | Plant }) => {
+            .then((res: { active_plant: boolean | ActivePlant }) => {
               if (!res.active_plant) {
-                plantAPI.plantTree(1).then((res: any) => {
+                plantAPI.plantTree(1).then((res: Plant) => {
                   console.log('res', res);
                   // 새로운 나무는 growth: 0이므로 작은 상태 유지
                   setIsTreeShrinking(false);
-                  setActivePlant(res);
+                  // setActivePlant(res as Plant);
                 });
               } else {
-                const plant = res.active_plant as any;
+                const plant = res.active_plant as ActivePlant;
                 localStorage.setItem('activePlant', JSON.stringify(plant));
                 // 새로운 나무는 growth: 0이므로 작은 상태 유지
                 setIsTreeShrinking(false);
@@ -177,23 +168,9 @@ const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange, o
             className={`transition-all duration-1000 ease-in-out z-10 ${
               // 나무 크기에 따른 클래스 적용 (growth가 100이면 큰 나무, 아니면 작은 나무)
               isTreeShrinking ? 'w-12 h-auto' : (activePlant?.growth === 100 ? 'w-48 h-auto' : 'w-12 h-auto')
-              } ${showGrowthAnimation ? 'animate-pulse' : '' // 성장 중일 때 깜빡임 효과
+              } ${activePlant?.growth === 100 ? 'animate-pulse' : '' // 성장 중일 때 깜빡임 효과
               }`}
           />
-
-          {/* Water drops */}
-          {waterDrops.map(drop => (
-            <img
-              key={drop.id}
-              src="/images/water_drop.png"
-              alt="Water Drop"
-              className="absolute w-6 h-6 pointer-events-none z-30 animate-bounce"
-              style={{
-                left: `${drop.x}px`,
-                top: `${drop.y}px`
-              }}
-            />
-          ))}
 
           {activePlant?.plant?.id === 1 && activePlant?.growth === 100 && !isTreeShrinking && apples.map(apple => (
             <div
@@ -210,30 +187,6 @@ const GameContainer: React.FC<GameContainerProps> = ({ isGrown, onGrownChange, o
               <img src="/assets/apple.svg" alt="Apple" className="w-full h-full" />
             </div>
           ))}
-
-          {/* Growth celebration - 단계별 성장 축하 애니메이션 */}
-          {showGrowthAnimation && (
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50">
-              {/* 1단계 성장 축하 (중간 나무) */}
-              {treeSize === 'medium' && (
-                <div className="absolute left-1/2 -top-8 transform -translate-x-1/2 bg-gradient-to-r from-green-400 to-blue-400 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg animate-bounce">
-                  자라나고 있어요! 🌱
-                </div>
-              )}
-
-              {/* 2단계 성장 축하 (큰 나무) */}
-              {treeSize === 'large' && (
-                <>
-                  <div className="absolute -left-8 -top-4 text-2xl animate-ping">✨</div>
-                  <div className="absolute left-4 -top-6 text-2xl animate-ping" style={{ animationDelay: '0.3s' }}>🌟</div>
-                  <div className="absolute -left-4 top-4 text-2xl animate-ping" style={{ animationDelay: '0.6s' }}>✨</div>
-                  <div className="absolute left-1/2 -top-12 transform -translate-x-1/2 bg-gradient-to-r from-red-400 to-yellow-400 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg animate-bounce">
-                    성장했어요! 🌳
-                  </div>
-                </>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -1,20 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { googleVisionService } from '../lib/GoogleVisionService';
+import { familyAPI } from '../lib/api';
+import { FamilyMember } from '../types';
 
 const AddMedicine = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [familyMember, setFamilyMember] = useState<FamilyMember | null>(null);
   const { family_id } = useParams();
+
+  const familyId = family_id || new URLSearchParams(location.search).get('family_id');
+
+  useEffect(() => {
+    if (familyId) {
+      familyAPI.getFamily().then((res: { family_members: FamilyMember[] }) => {
+        const member = res.family_members.find(m => m.id === Number(familyId));
+        if (member) {
+          setFamilyMember(member);
+        }
+      }).catch(error => {
+        console.error('Failed to load family member info:', error);
+      });
+    }
+  }, [familyId]);
 
   const handleUploadClick = () => {
     setShowUploadModal(true);
   };
 
   const handleDirectInput = () => {
-    navigate('/add-medicine-search');
+    if (familyId) {
+      navigate('/add-medicine-search', { state: { family_id: familyId, family_name: familyMember?.nickname } });
+    } else {
+      navigate('/add-medicine-search');
+    }
   };
 
   const processImage = async (file: File) => {
@@ -29,8 +52,12 @@ const AddMedicine = () => {
 
       // OCR 성공 시 약 검색 화면으로 이동하거나 결과를 표시
       if (result && result.success) {
-        navigate('/drug-cart', {
-          state: { medications: result.data }
+        navigate('/drug-cart?family_id=' + familyId, {
+          state: {
+            medications: result.data,
+            family_id: familyId,
+            family_name: familyMember?.nickname
+          }
         });
       } else {
         setError(typeof result?.data === 'string' ? result.data : '처방전을 인식할 수 없습니다.');
@@ -96,7 +123,14 @@ const AddMedicine = () => {
 
   return (
     <div className="bg-white min-h-screen">
-
+      {/* Header with family member name if applicable */}
+      {familyMember && (
+        <div className="p-4 bg-orange-50 border-b border-orange-100">
+          <p className="text-sm text-orange-700 font-medium">
+            {familyMember.nickname}님의 약 추가
+          </p>
+        </div>
+      )}
 
       <div className="flex-1 p-6">
         <div className="text-center mb-8">
@@ -153,7 +187,6 @@ const AddMedicine = () => {
         </div>
       )}
 
-      {/* 업로드 모달 */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-80 mx-4">
@@ -163,20 +196,20 @@ const AddMedicine = () => {
                 onClick={handleCameraUpload}
                 className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Shoot with camera
+                사진찍기
               </button>
               <button
                 onClick={handleGalleryUpload}
                 className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Select from gallery
+                사진첩에서 선택
               </button>
             </div>
             <button
               onClick={() => setShowUploadModal(false)}
               className="w-full mt-4 p-3 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              취소
             </button>
           </div>
         </div>

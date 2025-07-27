@@ -7,13 +7,15 @@ const Store = () => {
       id: 1,
       treeType: "사과나무",
       point: 0,
-      image: "/assets/tree.png"
+      image: "/assets/tree.png",
+      isLocked: false
     },
     {
       id: 2,
       treeType: "배나무",
       point: 10,
-      image: "/assets/tree.png"
+      image: "/assets/tree.png",
+      isLocked: false
     },
     {
       id: 3,

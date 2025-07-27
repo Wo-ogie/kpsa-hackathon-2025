@@ -6,12 +6,13 @@ import { Prescription } from '../types/prescription';
 const MedicationList = () => {
   const navigate = useNavigate();
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const { family_id } = useParams();
+  const { id } = useParams();
 
   useEffect(() => {
-    drugAPI.getPrescriptions(Number(family_id)).then((res: { prescriptions: Prescription[] }) => {
-      setPrescriptions(res.prescriptions);
-    });
+    drugAPI.getPrescriptions(Number(id))
+      .then((res: { prescriptions: Prescription[] }) => {
+        setPrescriptions(res.prescriptions);
+      });
   }, []);
 
 
@@ -22,7 +23,7 @@ const MedicationList = () => {
         {prescriptions.map((category) => (
           <div
             key={category.id}
-            onClick={() => navigate('/medication-info')}
+            onClick={() => navigate('/medication-info', { state: { id: id } })}
             className="flex items-center justify-between p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
           >
             <div>

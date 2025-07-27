@@ -13,13 +13,12 @@ import MainLayout from '../components/layout/MainLayout'
 import Dose from '../views/Dose'
 import Album from '../views/Album'
 import Store from '../views/Store'
-import MedicationList from '../views/MedicationList'
 import MedicationInfo from '../views/MedicationInfo'
 import MedicationDetail from '../views/MedicationDetail'
 import MedicationRecord from '../views/MedicationRecord'
-import MedicationRecordCalendar from '../views/MedicationRecordCalendar'
 import MedicationRecordAdd from '../views/MedicationRecordAdd'
 import MedicationHistory from '../views/MedicationHistory'
+import PatientMedicationHistory from '../views/PatientMedicationHistory'
 import AddMedicine from '../views/AddMedicine'
 import AddMedicineSearch from '../views/AddMedicineSearch'
 import AddMedicineDetail from '../views/AddMedicineDetail'
@@ -30,6 +29,7 @@ import FamilyNickname from '../views/FamilyNickname'
 import FamilyPermissions from '../views/FamilyPermissions'
 import Family from '../views/Family'
 import SetMedicineDetail from '../views/SetMedicineDetail'
+import MedicationList from '../views/MedicationList'
 
 export const router = createBrowserRouter([
   {
@@ -172,7 +172,7 @@ export const router = createBrowserRouter([
         },
       },
       {
-        path: 'medication-info',
+        path: 'medication-info/:id',
         element: <MedicationInfo />,
         handle: {
           title: '나의 복약 정보',
@@ -193,13 +193,6 @@ export const router = createBrowserRouter([
         },
       },
       {
-        path: 'medication-record-calendar',
-        element: <MedicationRecordCalendar />,
-        handle: {
-          title: '나의 복약 기록',
-        },
-      },
-      {
         path: 'medication-record-add',
         element: <MedicationRecordAdd />,
         handle: {
@@ -211,6 +204,20 @@ export const router = createBrowserRouter([
         element: <MedicationHistory />,
         handle: {
           title: '복약 히스토리',
+        },
+      },
+      {
+        path: 'patient-medication-history',
+        element: <PatientMedicationHistory />,
+        handle: {
+          title: '복약 기록',
+        },
+      },
+      {
+        path: 'medication-list/:id',
+        element: <MedicationList />,
+        handle: {
+          title: '복약 정보',
         },
       },
       {

@@ -6,6 +6,7 @@ const NamingPrescription = () => {
   const navigate = useNavigate();
   const [prescriptionName, setPrescriptionName] = useState('처방약');
   const location = useLocation();
+  const familyId = location.search.split('=')[1];
 
 
   const handleClearInput = () => {
@@ -18,10 +19,10 @@ const NamingPrescription = () => {
       medication_start_date: '2025-07-26',
       medication_times: ['MORNING'],
       drugs: location.state?.medications,
-    });
+    }, familyId ? Number(familyId) : 0);
 
     if (response) {
-      navigate('/medication-history');
+      navigate('/medication-history', { state: { family_id: familyId } });
     }
   }
 

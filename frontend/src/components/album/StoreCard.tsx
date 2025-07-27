@@ -6,7 +6,7 @@ interface AlbumCardProps {
   treeType: string;
   point: number;
   image: string;
-  isLocked: boolean;
+  isLocked?: boolean;
 }
 
 const AlbumCard: React.FC<AlbumCardProps> = ({

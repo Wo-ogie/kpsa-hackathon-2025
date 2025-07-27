@@ -20,8 +20,6 @@ const Main: React.FC = () => {
   const [toastPoints, setToastPoints] = useState(0);
   const [activePlant, setActivePlant] = useState<Plant | null>(null);
   const [growth, setGrowth] = useState(0);
-
-
   // 컴포넌트 마운트 시 저장된 이름 불러오기
   useEffect(() => {
     const savedName = localStorage.getItem('gardenName');
@@ -87,7 +85,6 @@ const Main: React.FC = () => {
           </div>
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-1">
-              <span className="text-orange-primary font-bold text-lg">LV. 5</span>
               <span className="text-gray-900 font-bold text-lg">{gardenName}</span>
             </div>
             <div className="flex items-center space-x-2">
@@ -114,7 +111,7 @@ const Main: React.FC = () => {
       <TreeNameModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        currentName={gardenName || "튼튼이"}
+        currentName={gardenName || "사과나무"}
         onSave={handleNameSave}
       />
 

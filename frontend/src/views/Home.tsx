@@ -11,11 +11,7 @@ const Home = () => {
           <img src="/images/text_logo.png" alt="logo" />
         </h1>
       </div>
-
       <div className="flex flex-col items-center px-4 pb-4 ">
-        <div className='pb-4'>
-          <KakaoLoginButton text="카카오로 로그인" />
-        </div>
         <KakaoLoginButton text="카카오로 회원가입" />
       </div>
     </div>

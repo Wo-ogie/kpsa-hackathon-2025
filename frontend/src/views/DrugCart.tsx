@@ -6,6 +6,7 @@ const DrugCart = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [medications, setMedications] = useState<Medication[]>([]);
+  const familyId = location.search.split('=')[1];
 
   const handleAddMedication = () => {
     navigate('/add-medicine-search');
@@ -16,8 +17,7 @@ const DrugCart = () => {
   };
 
   const handleNext = () => {
-    console.log('medications', medications);
-    navigate('/naming-prescription', {
+    navigate('/naming-prescription?family_id=' + familyId, {
       state: { medications: medications }
     });
   };

@@ -31,7 +31,12 @@ const Welcome = () => {
       {/* 하단 버튼 */}
       <div className="pb-8">
         <Button
-          onClick={() => navigate("/main")}
+          onClick={() => {
+            const isGuardian = localStorage.getItem('is_guardian') === 'true';
+            console.log('사용자 타입:', isGuardian ? '보호자' : '어르신');
+            console.log('localStorage is_guardian:', localStorage.getItem('is_guardian'));
+            navigate("/main");
+          }}
           variant="primary"
           size="lg"
           fullWidth

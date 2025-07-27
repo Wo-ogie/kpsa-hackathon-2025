@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import BackButton from '../components/common/BackButton';
 
 const MedicationRecordAdd = () => {
-  const [selectedDate, setSelectedDate] = useState('2025년 7월 26일');
+  const [selectedDate] = useState('2025년 7월 26일');
   const [isPeriod, setIsPeriod] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');

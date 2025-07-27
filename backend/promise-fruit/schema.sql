@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS `notifications`;
 DROP TABLE IF EXISTS `family`;
 DROP TABLE IF EXISTS `medication_history`;
 DROP TABLE IF EXISTS `purchased_plant`;
@@ -119,4 +120,18 @@ CREATE TABLE `family`
     UNIQUE KEY `uniq_family_pair` (`requester_id`, `recipient_id`),
     FOREIGN KEY (`requester_id`) REFERENCES `user` (`id`),
     FOREIGN KEY (`recipient_id`) REFERENCES `user` (`id`)
+);
+
+
+CREATE TABLE `notifications`
+(
+    `id`         BIGINT      NOT NULL AUTO_INCREMENT,
+    `user_id`    BIGINT      NOT NULL,
+    `title`      VARCHAR(50) NOT NULL,
+    `content`    VARCHAR(50) NOT NULL,
+    `is_read`    BOOLEAN     NOT NULL DEFAULT FALSE,
+    `created_at` TIMESTAMP   NOT NULL,
+    `updated_at` TIMESTAMP   NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 );

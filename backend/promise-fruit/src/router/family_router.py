@@ -1,11 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth_session import get_current_user
 from src.database import get_session
 from src.entity import Family, User
-from src.schema import AddUserToFamilyRequest, AddUserToFamilyResponse, FamilyMembersResponse, FamilyMemberResponse
+from src.schema import (
+    AddUserToFamilyRequest, AddUserToFamilyResponse, FamilyMembersResponse, FamilyMemberResponse,
+    UpdateFamilyNicknameRequest
+)
 
 router = APIRouter(prefix="/api/families", tags=["family"])
 
@@ -92,3 +97,41 @@ async def add_user_to_family(
     await session.commit()
 
     return AddUserToFamilyResponse(requester_id=current_user_id, recipient_id=recipient_user.id)
+
+
+@router.put(
+    path="/nicknames",
+    summary="가족 별명 변경",
+    description="가족 별명을 변경합니다"
+)
+async def update_family_nickname(
+    user_id: Annotated[int, Query(..., description="별명을 변경할 가족의 유저 ID")],
+    request: UpdateFamilyNicknameRequest,
+    current_user_id: int = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> FamilyMemberResponse:
+    result = await session.execute(
+        select(User).where(User.id == current_user_id)
+    )
+    current_user: User | None = result.scalar()
+    if current_user is None:
+        raise HTTPException(status_code=404, detail="Current user not found.")
+
+    await current_user.awaitable_attrs.requested_families
+    for family in current_user.requested_families:
+        if family.recipient_id == user_id:
+            family.recipient_nickname = request.nickname
+            session.add(family)
+            await session.commit()
+            await session.flush()
+            return FamilyMemberResponse.model_validate_family(family, is_requester=True)
+    await current_user.awaitable_attrs.received_families
+    for family in current_user.received_families:
+        if family.recipient_id == user_id:
+            family.requester_nickname = request.nickname
+            session.add(family)
+            await session.commit()
+            await session.flush()
+            return FamilyMemberResponse.model_validate_family(family, is_requester=False)
+
+    raise HTTPException(status_code=404, detail="Family not found.")

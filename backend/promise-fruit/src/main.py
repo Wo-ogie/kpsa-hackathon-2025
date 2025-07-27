@@ -12,6 +12,7 @@ from src.router.auth_router import router as auth_router
 from src.router.drug_router import router as drug_router
 from src.router.family_router import router as family_router
 from src.router.medication_router import router as medication_router
+from src.router.notification_router import router as notification_router
 from src.router.plant_router import router as plant_router
 from src.router.prescription_router import router as prescription_router
 from src.router.user_router import router as user_router
@@ -45,6 +46,7 @@ app.include_router(drug_router)
 app.include_router(plant_router)
 app.include_router(medication_router)
 app.include_router(family_router)
+app.include_router(notification_router)
 
 app.add_middleware(
     CORSMiddleware,

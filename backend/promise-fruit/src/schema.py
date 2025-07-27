@@ -229,6 +229,10 @@ class AddUserToFamilyRequest(BaseModel):
     allow_alarm: bool = Field(..., description="자신의 약물 미복용 시, 알림 전달 여부")
 
 
+class UpdateFamilyNicknameRequest(BaseModel):
+    nickname: str = Field(..., description="변경할 별명")
+
+
 class AddUserToFamilyResponse(BaseModel):
     requester_id: int = Field(..., description="가족 추가 요청을 보낸 유저의 ID")
     recipient_id: int = Field(..., description="가족 추가 요청을 받은 유저의 ID")
@@ -264,3 +268,23 @@ class FamilyMemberResponse(BaseModel):
 
 class FamilyMembersResponse(BaseModel):
     family_members: list[FamilyMemberResponse] = Field(..., description="가족으로 등록된 유저 목록")
+
+
+"""
+Notification
+"""
+
+
+class NotificationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="알림 ID")
+    title: str = Field(..., description="제목")
+    content: str = Field(..., description="내용")
+    is_read: bool = Field(..., description="조회 여부")
+    created_at: datetime = Field(..., description="생성 시각")
+    updated_at: datetime = Field(..., description="수정 시각")
+
+
+class NotificationsResponse(BaseModel):
+    notifications: list[NotificationResponse] = Field(..., description="알림 목록")

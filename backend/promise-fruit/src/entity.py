@@ -161,3 +161,13 @@ class Family(BaseEntity):
         back_populates="received_families",
         lazy="joined"
     )
+
+
+class Notification(BaseEntity):
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column("id", BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column("user_id", BigInteger, ForeignKey("user.id"), nullable=False)
+    title: Mapped[str] = mapped_column("title", String(50), nullable=False)
+    content: Mapped[str] = mapped_column("content", String(50), nullable=False)
+    is_read: Mapped[bool] = mapped_column("is_read", Boolean, nullable=False, default=False)
